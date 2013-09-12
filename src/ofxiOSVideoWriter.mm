@@ -1,12 +1,10 @@
 //
 //  ofxiOSVideoWriter.cpp
-//  iosScreenRecord
-//
 //  Created by Lukasz Karluk on 3/09/13.
-//
 //
 
 #include "ofxiOSVideoWriter.h"
+#include "ofxiOSEAGLView.h"
 
 //-------------------------------------------------------------------------
 #define STRINGIFY(x) #x
@@ -64,6 +62,8 @@ void ofxiOSVideoWriter::setup(int videoWidth, int videoHeight) {
     
     CGSize videoSize = CGSizeMake(videoWidth, videoHeight);
     videoWriter = [[VideoWriter alloc] initWithFile:@"somefile.mov" andVideoSize:videoSize];
+    videoWriter.context = [ofxiOSEAGLView getInstance].context; // TODO - this should probably be passed in with init.
+    videoWriter.enableTextureCache = NO; // TODO - this should be turned on by default when it is working.
     
     shaderBGRA.setupShaderFromSource(GL_VERTEX_SHADER, swizzleVertexShader);
     shaderBGRA.setupShaderFromSource(GL_FRAGMENT_SHADER, swizzleFragmentShader);
@@ -98,6 +98,7 @@ void ofxiOSVideoWriter::startRecording() {
     
     startTime = ofGetElapsedTimef();
     startFrame = ofGetFrameNum();
+
     [videoWriter startRecording];
 }
 
@@ -128,18 +129,22 @@ void ofxiOSVideoWriter::end() {
     fbo.end();
 
     //----------------------------------------------
-    shaderBGRA.begin();
+    if((videoWriter == nil) ||
+       [videoWriter isWriting] == NO) {
+        return;
+    }
+    
+    //----------------------------------------------
+    if(shaderBGRA.isLoaded()) {
+        shaderBGRA.begin();
+    }
     fboBGRA.begin();
     
     fbo.draw(0, 0);
     
     fboBGRA.end();
-    shaderBGRA.end();
-
-    //----------------------------------------------
-    if((videoWriter == nil) ||
-       [videoWriter isWriting] == NO) {
-        return;
+    if(shaderBGRA.isLoaded()) {
+        shaderBGRA.end();
     }
     
     //----------------------------------------------
@@ -154,8 +159,7 @@ void ofxiOSVideoWriter::end() {
     
     fboBGRA.bind();
 
-    CMTime frameTime = CMTimeMakeWithSeconds(time, NSEC_PER_SEC);
-	[videoWriter addPixelsToFrame:NULL atFrameTime:frameTime];
+	[videoWriter addFrameAtTime:CMTimeMakeWithSeconds(time, NSEC_PER_SEC)];
     
     fboBGRA.unbind();
 }

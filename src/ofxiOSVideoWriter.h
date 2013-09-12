@@ -1,9 +1,6 @@
 //
 //  ofxiOSVideoWriter.h
-//  iosScreenRecord
-//
 //  Created by Lukasz Karluk on 3/09/13.
-//
 //
 
 #include "ofMain.h"

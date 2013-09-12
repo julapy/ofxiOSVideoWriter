@@ -1,6 +1,5 @@
 //
 //  VideoWriter.h
-//
 //  Created by lukasz karluk on 15/06/12.
 //
 
@@ -21,10 +20,12 @@
 
 @property(nonatomic, assign) id delegate;
 @property(nonatomic, assign) CGSize videoSize;
+@property(nonatomic, retain) EAGLContext * context;
 @property(nonatomic, retain) AVAssetWriter * assetWriter;
 @property(nonatomic, retain) AVAssetWriterInput * assetWriterInput;
-@property(nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor * adaptor;
+@property(nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor * assetWriterInputPixelBufferAdaptor;
 @property(nonatomic, retain) NSURL * outputURL;
+@property(nonatomic, assign) BOOL enableTextureCache;
 
 - (id)initWithFile:(NSString *)file andVideoSize:(CGSize)size;
 - (id)initWithPath:(NSString *)path andVideoSize:(CGSize)size;
@@ -35,8 +36,11 @@
 - (void)finishRecording;
 - (BOOL)isWriting;
 
-- (void)addPixelsToFrame:(GLubyte *)pixels
-             atFrameTime:(CMTime)frameTime;
+- (void)addFrameAtTime:(CMTime)frameTime;
+
+- (BOOL)isTextureCached;
+- (unsigned int)textureCacheID;
+- (int)textureCacheTarget;
 
 - (void)saveMovieToCameraRoll;
 
