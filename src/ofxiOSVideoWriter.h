@@ -21,6 +21,8 @@ public:
     void startRecording();
     void cancelRecording();
     void finishRecording();
+    bool isRecording();
+    int getRecordFrameNum();
     
     void begin();
     void end();
@@ -31,7 +33,8 @@ public:
     ofShader shaderBGRA;
 
     float startTime;
-    int startFrame;
+    int startFrameNum;
+    int recordFrameNum;
     float recordFPS;
     bool bLockToFPS;
 };

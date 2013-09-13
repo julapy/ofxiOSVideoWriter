@@ -42,7 +42,8 @@ ofxiOSVideoWriter::ofxiOSVideoWriter() {
     videoWriter = nil;
     
     startTime = 0;
-    startFrame = 0;
+    startFrameNum = 0;
+    recordFrameNum = 0;
     recordFPS = 0;
     bLockToFPS = false;
 }
@@ -81,7 +82,7 @@ void ofxiOSVideoWriter::setFPS(float fps) {
 
 //------------------------------------------------------------------------- update.
 void ofxiOSVideoWriter::update() {
-    //
+    recordFrameNum = ofGetFrameNum() - startFrameNum;
 }
 
 //------------------------------------------------------------------------- draw.
@@ -97,7 +98,7 @@ void ofxiOSVideoWriter::startRecording() {
     }
     
     startTime = ofGetElapsedTimef();
-    startFrame = ofGetFrameNum();
+    startFrameNum = ofGetFrameNum();
 
     [videoWriter startRecording];
 }
@@ -118,6 +119,18 @@ void ofxiOSVideoWriter::finishRecording() {
     }
     
     [videoWriter finishRecording];
+}
+
+bool ofxiOSVideoWriter::isRecording() {
+    if((videoWriter != nil) &&
+       [videoWriter isWriting] == YES) {
+        return YES;
+    }
+    return NO;
+}
+
+int ofxiOSVideoWriter::getRecordFrameNum() {
+    return recordFrameNum;
 }
 
 //------------------------------------------------------------------------- begin / end.
@@ -151,8 +164,7 @@ void ofxiOSVideoWriter::end() {
     float time = 0;
     
     if(bLockToFPS) {
-        int frameNum = ofGetFrameNum() - startFrame;
-        time = frameNum / (float)recordFPS;
+        time = recordFrameNum / (float)recordFPS;
     } else {
         time = ofGetElapsedTimef() - startTime;
     }
