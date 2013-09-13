@@ -22,7 +22,7 @@
 @property(nonatomic, assign) CGSize videoSize;
 @property(nonatomic, retain) EAGLContext * context;
 @property(nonatomic, retain) AVAssetWriter * assetWriter;
-@property(nonatomic, retain) AVAssetWriterInput * assetWriterInput;
+@property(nonatomic, retain) AVAssetWriterInput * assetWriterVideoInput;
 @property(nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor * assetWriterInputPixelBufferAdaptor;
 @property(nonatomic, retain) NSURL * outputURL;
 @property(nonatomic, assign) BOOL enableTextureCache;

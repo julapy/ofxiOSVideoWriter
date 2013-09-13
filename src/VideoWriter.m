@@ -30,7 +30,7 @@
 @synthesize videoSize;
 @synthesize context;
 @synthesize assetWriter;
-@synthesize assetWriterInput;
+@synthesize assetWriterVideoInput;
 @synthesize assetWriterInputPixelBufferAdaptor;
 @synthesize outputURL;
 @synthesize enableTextureCache;
@@ -75,11 +75,11 @@
 - (void)dealloc {
     self.outputURL = nil;
     
-    [self.assetWriterInput markAsFinished];
+    [self.assetWriterVideoInput markAsFinished];
     [self.assetWriter finishWriting];
     [self.assetWriter cancelWriting];
     
-    self.assetWriterInput = nil;
+    self.assetWriterVideoInput = nil;
     self.assetWriter = nil;
     self.assetWriterInputPixelBufferAdaptor = nil;
     
@@ -122,9 +122,9 @@
     
     // initialized a new input for video to receive sample buffers for writing
     // passing nil for outputSettings instructs the input to pass through appended samples, doing no processing before they are written
-    self.assetWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
-                                                               outputSettings:videoSettings];
-    self.assetWriterInput.expectsMediaDataInRealTime = YES;
+    self.assetWriterVideoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
+                                                                    outputSettings:videoSettings];
+    self.assetWriterVideoInput.expectsMediaDataInRealTime = YES;
     
     // You need to use BGRA for the video in order to get realtime encoding.
     // Color-swizzling shader is used to line up glReadPixels' normal RGBA output with the movie input's BGRA.
@@ -134,11 +134,11 @@
                                                             [NSNumber numberWithInt:videoSize.height], kCVPixelBufferHeightKey,
                                                             nil];
     
-    self.assetWriterInputPixelBufferAdaptor = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:self.assetWriterInput
+    self.assetWriterInputPixelBufferAdaptor = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:self.assetWriterVideoInput
                                                                                                                sourcePixelBufferAttributes:sourcePixelBufferAttributesDictionary];
     
-    if([self.assetWriter canAddInput:self.assetWriterInput]) {
-        [self.assetWriter addInput:self.assetWriterInput];
+    if([self.assetWriter canAddInput:self.assetWriterVideoInput]) {
+        [self.assetWriter addInput:self.assetWriterVideoInput];
     }
     
 	[self.assetWriter startWriting];
@@ -163,10 +163,10 @@
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
 
-        [self.assetWriterInput markAsFinished];
+        [self.assetWriterVideoInput markAsFinished];
         [self.assetWriter finishWriting];
         
-        self.assetWriterInput = nil;
+        self.assetWriterVideoInput = nil;
         self.assetWriter = nil;
         self.assetWriterInputPixelBufferAdaptor = nil;
         
@@ -192,11 +192,11 @@
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
 
-        [self.assetWriterInput markAsFinished];
+        [self.assetWriterVideoInput markAsFinished];
         [self.assetWriter finishWriting];
         [self.assetWriter cancelWriting];
         
-        self.assetWriterInput = nil;
+        self.assetWriterVideoInput = nil;
         self.assetWriter = nil;
         self.assetWriterInputPixelBufferAdaptor = nil;
         
@@ -227,7 +227,7 @@
         return;
     }
     
-    if(assetWriterInput.readyForMoreMediaData == NO) {
+    if(assetWriterVideoInput.readyForMoreMediaData == NO) {
         NSLog(@"Had to drop a video frame");
         return;
     }
