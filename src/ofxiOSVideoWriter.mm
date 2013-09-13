@@ -80,6 +80,10 @@ void ofxiOSVideoWriter::setFPS(float fps) {
     bLockToFPS = true;
 }
 
+float ofxiOSVideoWriter::getFPS() {
+    return recordFPS;
+}
+
 //------------------------------------------------------------------------- update.
 void ofxiOSVideoWriter::update() {
     recordFrameNum = ofGetFrameNum() - startFrameNum;

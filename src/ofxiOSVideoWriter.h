@@ -14,6 +14,7 @@ public:
     
     void setup(int videoWidth, int videoHeight);
     void setFPS(float fps);
+    float getFPS();
     
     void update();
     void draw(float x=0, float y=0);
