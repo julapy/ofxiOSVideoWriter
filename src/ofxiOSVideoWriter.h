@@ -6,6 +6,9 @@
 #include "ofMain.h"
 #include "VideoWriter.h"
 
+class ofxiOSVideoPlayer;
+class ofxiOSSoundPlayer;
+
 class ofxiOSVideoWriter {
     
 public:
@@ -15,6 +18,9 @@ public:
     void setup(int videoWidth, int videoHeight);
     void setFPS(float fps);
     float getFPS();
+    
+    void addAudioInputFromVideoPlayer(ofxiOSVideoPlayer & video);
+    void addAudioInputFromSoundPlayer(ofxiOSSoundPlayer & sound);
     
     void update();
     void draw(float x=0, float y=0);
@@ -32,6 +38,9 @@ public:
     ofFbo fbo;
     ofFbo fboBGRA;
     ofShader shaderBGRA;
+    
+    vector<ofxiOSVideoPlayer *> videos;
+    vector<ofxiOSSoundPlayer *> sounds;
 
     float startTime;
     int startFrameNum;
