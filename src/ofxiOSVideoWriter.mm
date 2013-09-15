@@ -4,7 +4,10 @@
 //
 
 #include "ofxiOSVideoWriter.h"
+#include "ofxiOSVideoPlayer.h"
+#include "ofxiOSSoundPlayer.h"
 #include "ofxiOSEAGLView.h"
+#import "AVFoundationVideoPlayer.h"
 
 //-------------------------------------------------------------------------
 #define STRINGIFY(x) #x
@@ -82,6 +85,14 @@ void ofxiOSVideoWriter::setFPS(float fps) {
 
 float ofxiOSVideoWriter::getFPS() {
     return recordFPS;
+}
+
+void ofxiOSVideoWriter::addAudioInputFromVideoPlayer(ofxiOSVideoPlayer & video) {
+    videos.push_back(&video);
+}
+
+void ofxiOSVideoWriter::addAudioInputFromSoundPlayer(ofxiOSSoundPlayer & sound) {
+    sounds.push_back(&sound);
 }
 
 //------------------------------------------------------------------------- update.
@@ -178,4 +189,10 @@ void ofxiOSVideoWriter::end() {
 	[videoWriter addFrameAtTime:CMTimeMakeWithSeconds(time, NSEC_PER_SEC)];
     
     fboBGRA.unbind();
+    
+    for(int i=0; i<videos.size(); i++) {
+        ofxiOSVideoPlayer & video = *videos[i];
+        AVFoundationVideoPlayer * avVideo = (AVFoundationVideoPlayer *)video.getAVFoundationVideoPlayer();
+        [videoWriter addAudio:[avVideo getAudioSampleBuffer]];
+    }
 }

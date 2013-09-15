@@ -166,7 +166,8 @@
                                     [NSNumber numberWithInt:64000], AVEncoderBitRateKey,
                                     nil];
 
-    self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSettings];
+    self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio
+                                                                    outputSettings:audioSettings];
     self.assetWriterAudioInput.expectsMediaDataInRealTime = YES;
     
     if([self.assetWriter canAddInput:self.assetWriterAudioInput]) {
@@ -335,8 +336,8 @@
     dispatch_sync(videoWriterQueue, ^{
         
         [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
-        CMSampleBufferInvalidate(audioBuffer);
-        CFRelease(audioBuffer);
+//        CMSampleBufferInvalidate(audioBuffer);
+//        CFRelease(audioBuffer);
     });
 }
 
