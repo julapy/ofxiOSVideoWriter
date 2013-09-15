@@ -31,6 +31,7 @@
 @synthesize context;
 @synthesize assetWriter;
 @synthesize assetWriterVideoInput;
+@synthesize assetWriterAudioInput;
 @synthesize assetWriterInputPixelBufferAdaptor;
 @synthesize outputURL;
 @synthesize enableTextureCache;
@@ -76,14 +77,22 @@
     self.outputURL = nil;
     
     [self.assetWriterVideoInput markAsFinished];
+    [self.assetWriterAudioInput markAsFinished];
     [self.assetWriter finishWriting];
     [self.assetWriter cancelWriting];
     
     self.assetWriterVideoInput = nil;
+    self.assetWriterAudioInput = nil;
     self.assetWriter = nil;
     self.assetWriterInputPixelBufferAdaptor = nil;
     
     [self destroyTextureCache];
+    
+#if ( (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0) || (!defined(__IPHONE_6_0)) )
+    if(videoWriterQueue != NULL) {
+        dispatch_release(videoWriterQueue);
+    }
+#endif
     
     [super dealloc];
 }
@@ -114,6 +123,7 @@
         return;
     }
     
+    //--------------------------------------------------------------------------- adding video input.
     NSDictionary * videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
                                     AVVideoCodecH264, AVVideoCodecKey,
                                     [NSNumber numberWithInt:self.videoSize.width], AVVideoWidthKey,
@@ -141,6 +151,29 @@
         [self.assetWriter addInput:self.assetWriterVideoInput];
     }
     
+    //--------------------------------------------------------------------------- adding audio input.
+    double preferredHardwareSampleRate = [[AVAudioSession sharedInstance] currentHardwareSampleRate];
+    
+    AudioChannelLayout acl;
+    bzero(&acl, sizeof(acl));
+    acl.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
+    
+    NSDictionary * audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                    [NSNumber numberWithInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
+                                    [NSNumber numberWithInt:1], AVNumberOfChannelsKey,
+                                    [NSNumber numberWithFloat:preferredHardwareSampleRate], AVSampleRateKey,
+                                    [NSData dataWithBytes:&acl length:sizeof(acl)], AVChannelLayoutKey,
+                                    [NSNumber numberWithInt:64000], AVEncoderBitRateKey,
+                                    nil];
+
+    self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSettings];
+    self.assetWriterAudioInput.expectsMediaDataInRealTime = YES;
+    
+    if([self.assetWriter canAddInput:self.assetWriterAudioInput]) {
+        [self.assetWriter addInput:self.assetWriterAudioInput];
+    }
+
+    //--------------------------------------------------------------------------- start writing!
 	[self.assetWriter startWriting];
 	[self.assetWriter startSessionAtSourceTime:startTime];
     
@@ -164,9 +197,11 @@
     dispatch_sync(videoWriterQueue, ^{
 
         [self.assetWriterVideoInput markAsFinished];
+        [self.assetWriterAudioInput markAsFinished];
         [self.assetWriter finishWriting];
         
         self.assetWriterVideoInput = nil;
+        self.assetWriterAudioInput = nil;
         self.assetWriter = nil;
         self.assetWriterInputPixelBufferAdaptor = nil;
         
@@ -193,10 +228,12 @@
     dispatch_sync(videoWriterQueue, ^{
 
         [self.assetWriterVideoInput markAsFinished];
+        [self.assetWriterAudioInput markAsFinished];
         [self.assetWriter finishWriting];
         [self.assetWriter cancelWriting];
         
         self.assetWriterVideoInput = nil;
+        self.assetWriterAudioInput = nil;
         self.assetWriter = nil;
         self.assetWriterInputPixelBufferAdaptor = nil;
         
@@ -267,6 +304,7 @@
     
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
+        
         if([self.assetWriterInputPixelBufferAdaptor appendPixelBuffer:pixelBuffer withPresentationTime:frameTime] == NO) {
             NSLog(@"Problem appending pixel buffer at time: %lld", frameTime.value);
         } else {
@@ -279,6 +317,26 @@
         if(bUseTextureCache == NO) {
             CVPixelBufferRelease(pixelBuffer);
         }
+    });
+}
+
+- (void)addAudio:(CMSampleBufferRef)audioBuffer {
+    
+    if(bWriting == NO) {
+        return;
+    }
+    
+    if(assetWriterAudioInput.readyForMoreMediaData == NO) {
+        NSLog(@"Had to drop a audio frame");
+        return;
+    }
+
+    //----------------------------------------------------------
+    dispatch_sync(videoWriterQueue, ^{
+        
+        [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
+        CMSampleBufferInvalidate(audioBuffer);
+        CFRelease(audioBuffer);
     });
 }
 

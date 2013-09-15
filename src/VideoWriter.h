@@ -23,6 +23,7 @@
 @property(nonatomic, retain) EAGLContext * context;
 @property(nonatomic, retain) AVAssetWriter * assetWriter;
 @property(nonatomic, retain) AVAssetWriterInput * assetWriterVideoInput;
+@property(nonatomic, retain) AVAssetWriterInput * assetWriterAudioInput;
 @property(nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor * assetWriterInputPixelBufferAdaptor;
 @property(nonatomic, retain) NSURL * outputURL;
 @property(nonatomic, assign) BOOL enableTextureCache;
@@ -37,6 +38,7 @@
 - (BOOL)isWriting;
 
 - (void)addFrameAtTime:(CMTime)frameTime;
+- (void)addAudio:(CMSampleBufferRef)audioBuffer;
 
 - (BOOL)isTextureCached;
 - (unsigned int)textureCacheID;
