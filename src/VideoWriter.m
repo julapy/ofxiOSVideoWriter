@@ -113,9 +113,9 @@
     
     // allocate the writer object with our output file URL
     NSError *error = nil;
-    self.assetWriter = [[[AVAssetWriter alloc] initWithURL:self.outputURL
-                                                  fileType:AVFileTypeQuickTimeMovie
-                                                     error:&error] autorelease];
+    self.assetWriter = [AVAssetWriter assetWriterWithURL:self.outputURL
+                                                fileType:AVFileTypeQuickTimeMovie
+                                                   error:&error];
     if(error) {
         if([self.delegate respondsToSelector:@selector(videoWriterError:)]) {
             [self.delegate videoWriterError:error];
@@ -154,17 +154,35 @@
     //--------------------------------------------------------------------------- adding audio input.
     double preferredHardwareSampleRate = [[AVAudioSession sharedInstance] currentHardwareSampleRate];
     
-    AudioChannelLayout acl;
-    bzero(&acl, sizeof(acl));
-    acl.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
+    AudioChannelLayout channelLayout;
+    bzero(&channelLayout, sizeof(channelLayout));
+    channelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
     
-    NSDictionary * audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-                                    [NSNumber numberWithInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
-                                    [NSNumber numberWithInt:1], AVNumberOfChannelsKey,
-                                    [NSNumber numberWithFloat:preferredHardwareSampleRate], AVSampleRateKey,
-                                    [NSData dataWithBytes:&acl length:sizeof(acl)], AVChannelLayoutKey,
-                                    [NSNumber numberWithInt:64000], AVEncoderBitRateKey,
-                                    nil];
+    int numOfChannels = 1;
+    if(channelLayout.mChannelLayoutTag == kAudioChannelLayoutTag_Stereo) {
+        numOfChannels = 2;
+    }
+    
+    NSDictionary * audioSettings = nil;
+    
+    audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                     [NSNumber numberWithInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
+                     [NSNumber numberWithInt:numOfChannels], AVNumberOfChannelsKey,
+                     [NSNumber numberWithFloat:preferredHardwareSampleRate], AVSampleRateKey,
+                     [NSData dataWithBytes:&channelLayout length:sizeof(channelLayout)], AVChannelLayoutKey,
+                     [NSNumber numberWithInt:64000], AVEncoderBitRateKey,
+                     nil];
+    
+//    audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+//                     [NSNumber numberWithInt:kAudioFormatLinearPCM], AVFormatIDKey,
+//                     [NSNumber numberWithFloat:preferredHardwareSampleRate], AVSampleRateKey,
+//                     [NSNumber numberWithInt:numOfChannels], AVNumberOfChannelsKey,
+//                     [NSData dataWithBytes:&channelLayout length:sizeof(AudioChannelLayout)], AVChannelLayoutKey,
+//                     [NSNumber numberWithInt:16], AVLinearPCMBitDepthKey,
+//                     [NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
+//                     [NSNumber numberWithBool:NO], AVLinearPCMIsFloatKey,
+//                     [NSNumber numberWithBool:NO], AVLinearPCMIsBigEndianKey,
+//                     nil];
 
     self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio
                                                                     outputSettings:audioSettings];
@@ -266,7 +284,7 @@
     }
     
     if(assetWriterVideoInput.readyForMoreMediaData == NO) {
-        NSLog(@"Had to drop a video frame");
+        NSLog(@"[VideoWriter addFrameAtTime] - not ready for more media data");
         return;
     }
 
@@ -306,11 +324,13 @@
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
         
-        if([self.assetWriterInputPixelBufferAdaptor appendPixelBuffer:pixelBuffer withPresentationTime:frameTime] == NO) {
-            NSLog(@"Problem appending pixel buffer at time: %lld", frameTime.value);
-        } else {
-            // NSLog(@"Recorded video sample time: %lld, %d, %lld", frameTime.value, frameTime.timescale, frameTime.epoch);
+        BOOL bOk = [self.assetWriterInputPixelBufferAdaptor appendPixelBuffer:pixelBuffer
+                                                         withPresentationTime:frameTime];
+        if(bOk == NO) {
+            NSString * errorDesc = self.assetWriter.error.description;
+            NSLog(@"[VideoWriter addFrameAtTime] - error appending video samples - %@", errorDesc);
         }
+        
         CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
         
         previousFrameTime = frameTime;
@@ -328,16 +348,22 @@
     }
     
     if(assetWriterAudioInput.readyForMoreMediaData == NO) {
-        NSLog(@"Had to drop a audio frame");
+        NSLog(@"[VideoWriter addAudio] - not ready for more media data");
+        return;
+    }
+    
+    if(audioBuffer == nil) {
+        NSLog(@"[VideoWriter addAudio] - audioBuffer was nil.");
         return;
     }
 
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
-        
-        [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
-//        CMSampleBufferInvalidate(audioBuffer);
-//        CFRelease(audioBuffer);
+        BOOL bOk = [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
+        if(bOk == NO) {
+            NSString * errorDesc = self.assetWriter.error.description;
+            NSLog(@"[VideoWriter addAudio] - error appending audio samples - %@", errorDesc);
+        }
     });
 }
 

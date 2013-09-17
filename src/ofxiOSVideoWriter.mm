@@ -175,7 +175,7 @@ void ofxiOSVideoWriter::end() {
         shaderBGRA.end();
     }
     
-    //----------------------------------------------
+    //---------------------------------------------- add video frame.
     float time = 0;
     
     if(bLockToFPS) {
@@ -190,6 +190,7 @@ void ofxiOSVideoWriter::end() {
     
     fboBGRA.unbind();
     
+    //---------------------------------------------- add sound.
     for(int i=0; i<videos.size(); i++) {
         ofxiOSVideoPlayer & video = *videos[i];
         AVFoundationVideoPlayer * avVideo = (AVFoundationVideoPlayer *)video.getAVFoundationVideoPlayer();
