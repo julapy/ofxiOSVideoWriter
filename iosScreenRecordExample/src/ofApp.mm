@@ -103,7 +103,7 @@ void ofApp::update(){
         int videoFramesTotal = videoPlayer.getTotalNumFrames();
         float videoPosition = videoFrame / (float)videoFramesTotal;
         
-        [avVideoPlayer setSampleTime:CMTimeMakeWithSeconds(timeSec, NSEC_PER_SEC)];
+        [avVideoPlayer setSampleTimeInSec:timeSec];
     }
     
     videoPlayer.update();
