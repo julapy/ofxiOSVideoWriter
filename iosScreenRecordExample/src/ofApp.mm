@@ -38,7 +38,7 @@ void ofApp::setup(){
     videoPlayer.loadMovie("video/ribbons.mp4");
     videoPlayer.setLoopState(OF_LOOP_NORMAL);
     videoPlayer.play();
-    videoPlayer.setVolume(0.0);
+//    videoPlayer.setVolume(0.0);
     
     //----------------------------------------------------------
     bRecord = false;
