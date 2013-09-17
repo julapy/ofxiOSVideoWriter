@@ -23,7 +23,9 @@ public:
     void addAudioInputFromSoundPlayer(ofxiOSSoundPlayer & sound);
     
     void update();
+    void draw(ofRectangle & rect);
     void draw(float x=0, float y=0);
+    void draw(float x, float y, float width, float height);
     
     void startRecording();
     void cancelRecording();

@@ -101,8 +101,16 @@ void ofxiOSVideoWriter::update() {
 }
 
 //------------------------------------------------------------------------- draw.
+void ofxiOSVideoWriter::draw(ofRectangle & rect) {
+    draw(rect.x, rect.y, rect.width, rect.height);
+}
+
 void ofxiOSVideoWriter::draw(float x, float y) {
-    fbo.draw(x, y);
+    draw(x, y, fbo.getWidth(), fbo.getHeight());
+}
+
+void ofxiOSVideoWriter::draw(float x, float y, float width, float height) {
+    fbo.draw(x, y, width, height);
 }
 
 //------------------------------------------------------------------------- record api.
