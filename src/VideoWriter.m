@@ -230,6 +230,7 @@
             if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
                 [self.delegate videoWriterComplete:self.outputURL];
             }
+            NSLog(@"video saved! - %@", self.outputURL.description);
         });
     });
 }
