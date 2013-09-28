@@ -64,7 +64,7 @@
         bWriting = NO;
         startTime = kCMTimeInvalid;
         previousFrameTime = kCMTimeInvalid;
-        videoWriterQueue = dispatch_queue_create("VideoWriterQueue", NULL);
+        videoWriterQueue = dispatch_queue_create("ofxiOSVideoWriter.VideoWriterQueue", NULL);
 
         bUseTextureCache = NO;
         bEnableTextureCache = NO;
@@ -76,17 +76,7 @@
 - (void)dealloc {
     self.outputURL = nil;
     
-    [self.assetWriterVideoInput markAsFinished];
-    [self.assetWriterAudioInput markAsFinished];
-    [self.assetWriter finishWriting];
-    [self.assetWriter cancelWriting];
-    
-    self.assetWriterVideoInput = nil;
-    self.assetWriterAudioInput = nil;
-    self.assetWriter = nil;
-    self.assetWriterInputPixelBufferAdaptor = nil;
-    
-    [self destroyTextureCache];
+    [self disposeAssetWriterAndWriteFile:NO];
     
 #if ( (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0) || (!defined(__IPHONE_6_0)) )
     if(videoWriterQueue != NULL) {
@@ -172,17 +162,6 @@
                      [NSData dataWithBytes:&channelLayout length:sizeof(channelLayout)], AVChannelLayoutKey,
                      [NSNumber numberWithInt:64000], AVEncoderBitRateKey,
                      nil];
-    
-//    audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-//                     [NSNumber numberWithInt:kAudioFormatLinearPCM], AVFormatIDKey,
-//                     [NSNumber numberWithFloat:preferredHardwareSampleRate], AVSampleRateKey,
-//                     [NSNumber numberWithInt:numOfChannels], AVNumberOfChannelsKey,
-//                     [NSData dataWithBytes:&channelLayout length:sizeof(AudioChannelLayout)], AVChannelLayoutKey,
-//                     [NSNumber numberWithInt:16], AVLinearPCMBitDepthKey,
-//                     [NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
-//                     [NSNumber numberWithBool:NO], AVLinearPCMIsFloatKey,
-//                     [NSNumber numberWithBool:NO], AVLinearPCMIsBigEndianKey,
-//                     nil];
 
     self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio
                                                                     outputSettings:audioSettings];
@@ -215,16 +194,7 @@
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
 
-        [self.assetWriterVideoInput markAsFinished];
-        [self.assetWriterAudioInput markAsFinished];
-        [self.assetWriter finishWriting];
-        
-        self.assetWriterVideoInput = nil;
-        self.assetWriterAudioInput = nil;
-        self.assetWriter = nil;
-        self.assetWriterInputPixelBufferAdaptor = nil;
-        
-        [self destroyTextureCache];
+        [self disposeAssetWriterAndWriteFile:YES];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
@@ -246,25 +216,33 @@
     
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
-
-        [self.assetWriterVideoInput markAsFinished];
-        [self.assetWriterAudioInput markAsFinished];
-        [self.assetWriter finishWriting];
-        [self.assetWriter cancelWriting];
         
-        self.assetWriterVideoInput = nil;
-        self.assetWriterAudioInput = nil;
-        self.assetWriter = nil;
-        self.assetWriterInputPixelBufferAdaptor = nil;
-        
-        [self destroyTextureCache];
-        
+		[self disposeAssetWriterAndWriteFile:NO];
+		
         dispatch_async(dispatch_get_main_queue(), ^{
             if([self.delegate respondsToSelector:@selector(videoWriterCancelled)]) {
                 [self.delegate videoWriterCancelled];
             }
         });
     });
+}
+
+- (void) disposeAssetWriterAndWriteFile:(BOOL)writeFile {
+	[self.assetWriterVideoInput markAsFinished];
+	[self.assetWriterAudioInput markAsFinished];
+	
+	if(writeFile) {
+		[self.assetWriter finishWriting];
+	} else {
+		[self.assetWriter cancelWriting];
+	}
+	
+	self.assetWriterVideoInput = nil;
+	self.assetWriterAudioInput = nil;
+	self.assetWriter = nil;
+	self.assetWriterInputPixelBufferAdaptor = nil;
+	
+	[self destroyTextureCache];
 }
 
 - (BOOL)isWriting {
