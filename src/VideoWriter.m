@@ -9,6 +9,7 @@
 @interface VideoWriter() {
 	CMTime startTime;
     CMTime previousFrameTime;
+	CMTime previousAudioTime;
     BOOL bWriting;
 
     BOOL bUseTextureCache;
@@ -193,9 +194,7 @@
     
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
-
         [self disposeAssetWriterAndWriteFile:YES];
-        
         dispatch_async(dispatch_get_main_queue(), ^{
             if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
                 [self.delegate videoWriterComplete:self.outputURL];
@@ -216,9 +215,7 @@
     
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
-        
 		[self disposeAssetWriterAndWriteFile:NO];
-		
         dispatch_async(dispatch_get_main_queue(), ^{
             if([self.delegate respondsToSelector:@selector(videoWriterCancelled)]) {
                 [self.delegate videoWriterCancelled];
@@ -326,15 +323,22 @@
         return;
     }
     
-    if(assetWriterAudioInput.readyForMoreMediaData == NO) {
-        NSLog(@"[VideoWriter addAudio] - not ready for more media data");
-        return;
-    }
-    
     if(audioBuffer == nil) {
         NSLog(@"[VideoWriter addAudio] - audioBuffer was nil.");
         return;
     }
+	
+	if(assetWriterAudioInput.readyForMoreMediaData == NO) {
+        NSLog(@"[VideoWriter addAudio] - not ready for more media data");
+        return;
+    }
+	
+	CMTime newBufferTime = CMSampleBufferGetPresentationTimeStamp(audioBuffer);
+	if(newBufferTime.value == previousAudioTime.value) {
+		return;
+	}
+		
+	previousAudioTime = newBufferTime;
 
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
