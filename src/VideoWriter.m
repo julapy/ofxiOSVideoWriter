@@ -229,18 +229,20 @@
 	[self.assetWriterVideoInput markAsFinished];
 	[self.assetWriterAudioInput markAsFinished];
 	
+	void (^releaseAssetWriter)(void) = ^{
+		self.assetWriterVideoInput = nil;
+		self.assetWriterAudioInput = nil;
+		self.assetWriter = nil;
+		self.assetWriterInputPixelBufferAdaptor = nil;
+		[self destroyTextureCache];
+	};
+	
 	if(writeFile) {
-		[self.assetWriter finishWriting];
+		[self.assetWriter finishWritingWithCompletionHandler:releaseAssetWriter];
 	} else {
 		[self.assetWriter cancelWriting];
+		releaseAssetWriter();
 	}
-	
-	self.assetWriterVideoInput = nil;
-	self.assetWriterAudioInput = nil;
-	self.assetWriter = nil;
-	self.assetWriterInputPixelBufferAdaptor = nil;
-	
-	[self destroyTextureCache];
 }
 
 - (BOOL)isWriting {
