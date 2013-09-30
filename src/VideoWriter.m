@@ -65,6 +65,7 @@
         bWriting = NO;
         startTime = kCMTimeInvalid;
         previousFrameTime = kCMTimeInvalid;
+		previousAudioTime = kCMTimeInvalid;
         videoWriterQueue = dispatch_queue_create("ofxiOSVideoWriter.VideoWriterQueue", NULL);
 
         bUseTextureCache = NO;
@@ -334,7 +335,7 @@
     }
 	
 	CMTime newBufferTime = CMSampleBufferGetPresentationTimeStamp(audioBuffer);
-	if(newBufferTime.value == previousAudioTime.value) {
+	if (CMTIME_COMPARE_INLINE(newBufferTime, ==, previousAudioTime)) {
 		return;
 	}
 		
