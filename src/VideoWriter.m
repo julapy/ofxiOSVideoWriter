@@ -18,7 +18,7 @@
 #ifdef __IPHONE_5_0
     CVOpenGLESTextureCacheRef _textureCache;
     CVOpenGLESTextureRef _textureRef;
-    CVPixelBufferRef _pixelBufferRef;
+    CVPixelBufferRef _textureCachePixelBuffer;
 #endif
     
 }
@@ -277,7 +277,7 @@
     
 #ifdef __IPHONE_5_0
     if(bUseTextureCache == YES) {
-        pixelBuffer = _pixelBufferRef;
+        pixelBuffer = _textureCachePixelBuffer;
         CVPixelBufferLockBaseAddress(pixelBuffer, 0);
     }
 #endif
@@ -376,11 +376,20 @@
     
     //-----------------------------------------------------------------------
     CVReturn error;
+#if defined(__IPHONE_6_0)
     error = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault,
-                                                NULL,
-                                                context,
-                                                NULL,
-                                                &_textureCache);
+                                         NULL,
+                                         context,
+                                         NULL,
+                                         &_textureCache);
+#else
+    error = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault,
+                                         NULL,
+                                         (__bridge void *)context,
+                                         NULL,
+                                         &_textureCache);
+#endif
+    
     if(error) {
         NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", error);
         bUseTextureCache = NO;
@@ -389,7 +398,7 @@
     
     //-----------------------------------------------------------------------
     CVPixelBufferPoolRef pixelBufferPool = [self.assetWriterInputPixelBufferAdaptor pixelBufferPool];
-    CVReturn status = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &_pixelBufferRef);
+    CVReturn status = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &_textureCachePixelBuffer);
     if(status != kCVReturnSuccess) {
         bUseTextureCache = NO;
         return;
@@ -397,7 +406,7 @@
     
     error = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,         // CFAllocatorRef allocator
                                                          _textureCache,               // CVOpenGLESTextureCacheRef textureCache
-                                                         _pixelBufferRef,             // CVPixelBufferRef source pixel buffer.
+                                                         _textureCachePixelBuffer,    // CVPixelBufferRef source pixel buffer.
                                                          NULL,                        // CFDictionaryRef textureAttributes
                                                          GL_TEXTURE_2D,               // GLenum target
                                                          GL_RGBA,                     // GLint internalFormat
@@ -438,9 +447,9 @@
         _textureRef = NULL;
     }
     
-    if(_pixelBufferRef) {
-        CVPixelBufferRelease(_pixelBufferRef);
-        _pixelBufferRef = NULL;
+    if(_textureCachePixelBuffer) {
+        CVPixelBufferRelease(_textureCachePixelBuffer);
+        _textureCachePixelBuffer = NULL;
     }
     
 #endif
