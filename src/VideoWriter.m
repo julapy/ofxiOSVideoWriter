@@ -15,12 +15,10 @@
     BOOL bUseTextureCache;
     BOOL bEnableTextureCache;
     BOOL bTextureCacheSupported;
-#ifdef __IPHONE_5_0
+
     CVOpenGLESTextureCacheRef _textureCache;
     CVOpenGLESTextureRef _textureRef;
     CVPixelBufferRef _textureCachePixelBuffer;
-#endif
-    
 }
 @end
 
@@ -275,12 +273,10 @@
     // if so, use the pixel buffer from the texture cache.
     //----------------------------------------------------------
     
-#ifdef __IPHONE_5_0
     if(bUseTextureCache == YES) {
         pixelBuffer = _textureCachePixelBuffer;
         CVPixelBufferLockBaseAddress(pixelBuffer, 0);
     }
-#endif
     
     //----------------------------------------------------------
     // if texture cache is disabled,
@@ -362,9 +358,11 @@
 }
 
 - (void)initTextureCache {
-#ifdef __IPHONE_5_0
     
     bTextureCacheSupported = (CVOpenGLESTextureCacheCreate != NULL);
+#if TARGET_IPHONE_SIMULATOR
+    bTextureCacheSupported = NO; // texture caching does not work properly on the simulator.
+#endif
     bUseTextureCache = bTextureCacheSupported;
     if(bEnableTextureCache == NO) {
         bUseTextureCache = NO;
@@ -422,19 +420,9 @@
         bUseTextureCache = NO;
         return;
     }
-    
-    //-----------------------------------------------------------------------
-//    glBindTexture(CVOpenGLESTextureGetTarget(_textureRef), CVOpenGLESTextureGetName(_textureRef));
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//    
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, CVOpenGLESTextureGetName(_textureRef), 0);
-    
-#endif
 }
 
 - (void)destroyTextureCache {
-#ifdef __IPHONE_5_0
     
     if(_textureCache) {
         CVOpenGLESTextureCacheFlush(_textureCache, 0);
@@ -451,8 +439,6 @@
         CVPixelBufferRelease(_textureCachePixelBuffer);
         _textureCachePixelBuffer = NULL;
     }
-    
-#endif
 }
 
 - (BOOL)isTextureCached {
@@ -460,16 +446,16 @@
 }
 
 - (unsigned int)textureCacheID {
-#ifdef __IPHONE_5_0
-    return CVOpenGLESTextureGetName(_textureRef);
-#endif
+    if(_textureRef != nil) {
+        return CVOpenGLESTextureGetName(_textureRef);
+    }
     return 0;
 }
 
 - (int)textureCacheTarget {
-#ifdef __IPHONE_5_0
-    return CVOpenGLESTextureGetTarget(_textureRef);
-#endif
+    if(_textureRef != nil) {
+        return CVOpenGLESTextureGetTarget(_textureRef);
+    }
     return 0;
 }
 

@@ -49,6 +49,7 @@ ofxiOSVideoWriter::ofxiOSVideoWriter() {
     recordFrameNum = 0;
     recordFPS = 0;
     bLockToFPS = false;
+    bUseTextureCache = false;
 }
 
 ofxiOSVideoWriter::~ofxiOSVideoWriter() {
@@ -67,7 +68,7 @@ void ofxiOSVideoWriter::setup(int videoWidth, int videoHeight) {
     CGSize videoSize = CGSizeMake(videoWidth, videoHeight);
     videoWriter = [[VideoWriter alloc] initWithFile:@"somefile.mov" andVideoSize:videoSize];
     videoWriter.context = [ofxiOSEAGLView getInstance].context; // TODO - this should probably be passed in with init.
-    videoWriter.enableTextureCache = NO; // TODO - this should be turned on by default when it is working.
+    videoWriter.enableTextureCache = YES; // TODO - this should be turned on by default when it is working.
     
     shaderBGRA.setupShaderFromSource(GL_VERTEX_SHADER, swizzleVertexShader);
     shaderBGRA.setupShaderFromSource(GL_FRAGMENT_SHADER, swizzleFragmentShader);
@@ -124,6 +125,10 @@ void ofxiOSVideoWriter::startRecording() {
     startFrameNum = ofGetFrameNum();
 
     [videoWriter startRecording];
+
+    if([videoWriter isTextureCached] == YES) {
+        initTextureCache();
+    }
 }
 
 void ofxiOSVideoWriter::cancelRecording() {
@@ -133,6 +138,8 @@ void ofxiOSVideoWriter::cancelRecording() {
     }
     
     [videoWriter cancelRecording];
+    
+    killTextureCache();
 }
 
 void ofxiOSVideoWriter::finishRecording() {
@@ -142,6 +149,8 @@ void ofxiOSVideoWriter::finishRecording() {
     }
     
     [videoWriter finishRecording];
+
+    killTextureCache();
 }
 
 bool ofxiOSVideoWriter::isRecording() {
@@ -154,6 +163,62 @@ bool ofxiOSVideoWriter::isRecording() {
 
 int ofxiOSVideoWriter::getRecordFrameNum() {
     return recordFrameNum;
+}
+
+//------------------------------------------------------------------------- texture cache
+void ofxiOSVideoWriter::initTextureCache() {
+    if(bUseTextureCache == true) {
+        return;
+    }
+    bUseTextureCache = true;
+    
+    unsigned int textureCacheID = [videoWriter textureCacheID];
+    int textureCacheTarget = [videoWriter textureCacheTarget];
+    
+    int textureW = fbo.getWidth();
+    int textureH = fbo.getHeight();
+    
+    ofTexture texture;
+    texture.allocate(textureW, textureH, GL_RGBA);
+    
+    ofTextureData & texData = texture.getTextureData();
+    texData.textureTarget = textureCacheTarget;
+    texData.tex_t = 1.0f; // these values need to be reset to 1.0 to work properly.
+    texData.tex_u = 1.0f; // assuming this is something to do with the way ios creates the texture cache.
+    
+    texture.setUseExternalTextureID(textureCacheID);
+    texture.setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+    texture.setTextureWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    if(!ofIsGLProgrammableRenderer()) {
+        texture.bind();
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        texture.unbind();
+    }
+    
+    fbo.bind();
+    fbo.createAndAttachTexture(texture,
+                               texture.getTextureData().glTypeInternal,
+                               0);
+    fbo.unbind();
+}
+
+void ofxiOSVideoWriter::killTextureCache() {
+    if(bUseTextureCache == false) {
+        return;
+    }
+    bUseTextureCache = false;
+    
+    int textureW = fbo.getWidth();
+    int textureH = fbo.getHeight();
+    
+    ofTexture texture;
+    texture.allocate(textureW, textureH, GL_RGBA);
+    
+    fbo.bind();
+    fbo.createAndAttachTexture(texture,
+                               texture.getTextureData().glTypeInternal,
+                               0);
+    fbo.unbind();
 }
 
 //------------------------------------------------------------------------- begin / end.
@@ -171,16 +236,26 @@ void ofxiOSVideoWriter::end() {
     }
     
     //----------------------------------------------
-    if(shaderBGRA.isLoaded()) {
-        shaderBGRA.begin();
-    }
-    fboBGRA.begin();
+    bool bSwizzle = (bUseTextureCache == false);
+    /*
+     *  texture caching automatically converts the RGB textures to BGR.
+     *  but if texture caching is not being used, we have to do this using
+     *  swizzle shaders.
+     */
     
-    fbo.draw(0, 0);
-    
-    fboBGRA.end();
-    if(shaderBGRA.isLoaded()) {
-        shaderBGRA.end();
+    if(bSwizzle) {
+        
+        if(shaderBGRA.isLoaded()) {
+            shaderBGRA.begin();
+        }
+        fboBGRA.begin();
+        
+        fbo.draw(0, 0);
+        
+        fboBGRA.end();
+        if(shaderBGRA.isLoaded()) {
+            shaderBGRA.end();
+        }
     }
     
     //---------------------------------------------- add video frame.
@@ -192,11 +267,15 @@ void ofxiOSVideoWriter::end() {
         time = ofGetElapsedTimef() - startTime;
     }
     
-    fboBGRA.bind();
+    if(bSwizzle) {
+        fboBGRA.bind();
+    }
 
 	[videoWriter addFrameAtTime:CMTimeMakeWithSeconds(time, NSEC_PER_SEC)];
     
-    fboBGRA.unbind();
+    if(bSwizzle) {
+        fboBGRA.unbind();
+    }
     
     //---------------------------------------------- add sound.
     for(int i=0; i<videos.size(); i++) {

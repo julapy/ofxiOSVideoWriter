@@ -33,6 +33,9 @@ public:
     bool isRecording();
     int getRecordFrameNum();
     
+    void initTextureCache();
+    void killTextureCache();
+    
     void begin();
     void end();
     
@@ -49,4 +52,5 @@ public:
     int recordFrameNum;
     float recordFPS;
     bool bLockToFPS;
+    bool bUseTextureCache;
 };
