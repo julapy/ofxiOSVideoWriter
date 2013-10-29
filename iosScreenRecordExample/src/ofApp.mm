@@ -35,16 +35,20 @@ void ofApp::setup(){
         points[i] = pointsNew[i];
     }
     
-    videoPlayer.loadMovie("video/ribbons.mp4");
-    videoPlayer.setLoopState(OF_LOOP_NORMAL);
-    videoPlayer.play();
-//    videoPlayer.setVolume(0.0);
+    videoPlayer0.loadMovie("video/ribbons.mp4");
+    videoPlayer0.setLoopState(OF_LOOP_NORMAL);
+    videoPlayer0.play();
+    
+    videoPlayer1.loadMovie("video/ribbons.mp4");
+    videoPlayer1.setLoopState(OF_LOOP_NORMAL);
+    videoPlayer1.play();
     
     //----------------------------------------------------------
     bRecord = false;
     videoWriter.setup(ofGetWidth(), ofGetHeight());
     videoWriter.setFPS(fps);
-    videoWriter.addAudioInputFromVideoPlayer(videoPlayer);
+    videoWriter.addAudioInputFromVideoPlayer(videoPlayer0);
+    videoWriter.addAudioInputFromVideoPlayer(videoPlayer1);
     if(bRecord == true) {
         videoWriter.startRecording();
     }
@@ -73,16 +77,26 @@ void ofApp::recordToggleChanged(bool & value) {
 }
 
 void ofApp::setupVideoPlayerForPlayback() {
-    videoPlayer.setPaused(false);
-    videoPlayer.setPosition(0);
+    videoPlayer0.setPaused(false);
+    videoPlayer0.setPosition(0);
     
-    AVFoundationVideoPlayer * avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer.getAVFoundationVideoPlayer();
+    videoPlayer1.setPaused(false);
+    videoPlayer1.setPosition(0);
+    
+    AVFoundationVideoPlayer * avVideoPlayer = nil;
+    avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
+    [avVideoPlayer setSampleTime:kCMTimeInvalid];
+    
+    avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer1.getAVFoundationVideoPlayer();
     [avVideoPlayer setSampleTime:kCMTimeInvalid];
 }
 
 void ofApp::setupVideoPlayerForRecording() {
-    videoPlayer.setPaused(true);
-    videoPlayer.setPosition(0);
+    videoPlayer0.setPaused(true);
+    videoPlayer0.setPosition(0);
+    
+    videoPlayer1.setPaused(true);
+    videoPlayer1.setPosition(0);
 }
 
 //--------------------------------------------------------------
@@ -93,20 +107,21 @@ void ofApp::update(){
     //----------------------------------------------------------
     if(videoWriter.isRecording()) {
 
-        AVFoundationVideoPlayer * avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer.getAVFoundationVideoPlayer();
+        AVFoundationVideoPlayer * avVideoPlayer = nil;
+        avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
         
         int recordFrameNum = videoWriter.getRecordFrameNum();
         float timeSec = recordFrameNum / (float)videoWriter.getFPS();
+        [avVideoPlayer setSampleTimeInSec:timeSec];
         
-        float videoFps = [avVideoPlayer getFrameRate];
-        int videoFrame = timeSec * videoFps;
-        int videoFramesTotal = videoPlayer.getTotalNumFrames();
-        float videoPosition = videoFrame / (float)videoFramesTotal;
-        
+        avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer1.getAVFoundationVideoPlayer();
+        timeSec -= 2; // start delay.
+        timeSec = MAX(timeSec, 0);
         [avVideoPlayer setSampleTimeInSec:timeSec];
     }
     
-    videoPlayer.update();
+    videoPlayer0.update();
+    videoPlayer1.update();
 
     //----------------------------------------------------------
     if(ofGetFrameNum() % 60 == 0) {
@@ -169,7 +184,20 @@ void ofApp::drawStuff() {
     drawPoints();
     
     ofSetColor(255, 220);
-    videoPlayer.getTexture()->draw(0, 0);
+    
+    int x, y, w, h;
+    x = 0;
+    y = 0;
+    w = videoPlayer0.getWidth();
+    h = videoPlayer0.getHeight();
+    videoPlayer0.getTexture()->draw(x, y, w, h);
+    
+    x = 0;
+    y = h;
+    w = videoPlayer1.getWidth() * 0.5;
+    h = videoPlayer1.getHeight() * 0.5;
+    videoPlayer1.getTexture()->draw(x, y, w, h);
+    
     ofSetColor(255);
 }
 

@@ -38,7 +38,8 @@ public:
     ofxiOSVideoWriter videoWriter;
     bool bRecord;
     
-    ofxiOSVideoPlayer videoPlayer;
+    ofxiOSVideoPlayer videoPlayer0;
+    ofxiOSVideoPlayer videoPlayer1;
     
     ofMesh box;
     ofFloatColor c1;
