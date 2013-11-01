@@ -61,12 +61,20 @@ ofxiOSVideoWriter::~ofxiOSVideoWriter() {
 
 //------------------------------------------------------------------------- setup.
 void ofxiOSVideoWriter::setup(int videoWidth, int videoHeight) {
+    NSError * error = nil;
+    NSString * docPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString * docVideoPath = [docPath stringByAppendingPathComponent:@"/video.mov"];
+
+    setup(videoWidth, videoHeight, [docVideoPath UTF8String]);
+}
+
+void ofxiOSVideoWriter::setup(int videoWidth, int videoHeight, string filePath) {
     if((videoWriter != nil)) {
         return;
     }
     
     CGSize videoSize = CGSizeMake(videoWidth, videoHeight);
-    videoWriter = [[VideoWriter alloc] initWithFile:@"somefile.mov" andVideoSize:videoSize];
+    videoWriter = [[VideoWriter alloc] initWithPath:[NSString stringWithUTF8String:filePath.c_str()] andVideoSize:videoSize];
     videoWriter.context = [ofxiOSEAGLView getInstance].context; // TODO - this should probably be passed in with init.
     videoWriter.enableTextureCache = YES; // TODO - this should be turned on by default when it is working.
     
