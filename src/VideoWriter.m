@@ -15,10 +15,12 @@
     BOOL bUseTextureCache;
     BOOL bEnableTextureCache;
     BOOL bTextureCacheSupported;
-
+	BOOL bFirstAudio;
+	
     CVOpenGLESTextureCacheRef _textureCache;
     CVOpenGLESTextureRef _textureRef;
     CVPixelBufferRef _textureCachePixelBuffer;
+	CMSampleBufferRef _firstAudioBuffer;
 }
 @end
 
@@ -77,6 +79,10 @@
     self.outputURL = nil;
     
     [self disposeAssetWriterAndWriteFile:NO];
+	
+	if(_firstAudioBuffer) {
+		CFRelease(_firstAudioBuffer);
+	}
     
 #if ( (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0) || (!defined(__IPHONE_6_0)) )
     if(videoWriterQueue != NULL) {
@@ -96,6 +102,10 @@
     
     startTime = kCMTimeZero;
     previousFrameTime = kCMTimeInvalid;
+	bFirstAudio = YES;
+	if(_firstAudioBuffer) {
+		CFRelease(_firstAudioBuffer);
+	}
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.outputURL.path]) { // remove old file.
         [[NSFileManager defaultManager] removeItemAtPath:self.outputURL.path error:nil];
@@ -338,15 +348,43 @@
 	}
 		
 	previousAudioTime = newBufferTime;
+	
+	// hold onto the first buffer, until we've figured out when playback truly starts (which is
+	// when the second buffer arrives)
+	if(bFirstAudio) {
+		CMSampleBufferCreateCopy(NULL, audioBuffer, &_firstAudioBuffer);
+		bFirstAudio = NO;
+		return;
+	}
 
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
-        BOOL bOk = [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
+		
+		if(_firstAudioBuffer) {
+			CMSampleBufferRef correctedFirstBuffer = [self copySampleBuffer:_firstAudioBuffer withNewTime:previousFrameTime];
+			[self.assetWriterAudioInput appendSampleBuffer:correctedFirstBuffer];
+			CFRelease(_firstAudioBuffer);
+			CFRelease(correctedFirstBuffer);
+			_firstAudioBuffer = NULL;
+		}
+		
+		BOOL bOk = [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
         if(bOk == NO) {
             NSString * errorDesc = self.assetWriter.error.description;
             NSLog(@"[VideoWriter addAudio] - error appending audio samples - %@", errorDesc);
         }
     });
+}
+
+- (CMSampleBufferRef) copySampleBuffer:(CMSampleBufferRef)buffer withNewTime:(CMTime)time {
+	CMSampleBufferRef newSample;
+	CMSampleTimingInfo timingInfo;
+	CMSampleBufferGetSampleTimingInfo(buffer, 0, &timingInfo);
+	CMTime newBufferTime = CMSampleBufferGetPresentationTimeStamp(buffer);
+	newBufferTime.value = (previousFrameTime.value / previousFrameTime.timescale) * newBufferTime.timescale;
+	timingInfo.presentationTimeStamp = newBufferTime;
+	CMSampleBufferCreateCopyWithNewTiming(NULL, buffer, 1, &timingInfo, &newSample);
+	return newSample;
 }
 
 //--------------------------------------------------------------------------- texture cache.
