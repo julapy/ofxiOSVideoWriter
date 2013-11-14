@@ -22,6 +22,7 @@ public:
     
     void addAudioInputFromVideoPlayer(ofxiOSVideoPlayer & video);
     void addAudioInputFromSoundPlayer(ofxiOSSoundPlayer & sound);
+    void clearAllAudioInput();
     
     void update();
     void draw(ofRectangle & rect);
