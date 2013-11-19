@@ -39,7 +39,6 @@ public:
     bool bRecord;
     
     ofxiOSVideoPlayer videoPlayer0;
-    ofxiOSVideoPlayer videoPlayer1;
     
     ofMesh box;
     ofFloatColor c1;
