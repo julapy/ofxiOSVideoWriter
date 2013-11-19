@@ -104,6 +104,11 @@ void ofxiOSVideoWriter::addAudioInputFromSoundPlayer(ofxiOSSoundPlayer & sound) 
     sounds.push_back(&sound);
 }
 
+void ofxiOSVideoWriter::clearAllAudioInput() {
+    videos.clear();
+    sounds.clear();
+}
+
 //------------------------------------------------------------------------- update.
 void ofxiOSVideoWriter::update() {
     recordFrameNum = ofGetFrameNum() - startFrameNum;
@@ -232,6 +237,8 @@ void ofxiOSVideoWriter::killTextureCache() {
 //------------------------------------------------------------------------- begin / end.
 void ofxiOSVideoWriter::begin() {
     fbo.begin();
+
+    ofClear(0);
 }
 
 void ofxiOSVideoWriter::end() {
