@@ -356,12 +356,21 @@
 		bFirstAudio = NO;
 		return;
 	}
+	// if the incoming audio buffer has an earlier timestamp than the current "first" buffer, then
+	// drop the current "first" buffer and store the new one instead
+	else if(_firstAudioBuffer && CMTIME_COMPARE_INLINE(CMSampleBufferGetPresentationTimeStamp(_firstAudioBuffer), >, newBufferTime)) {
+		CFRelease(_firstAudioBuffer);
+		CMSampleBufferCreateCopy(NULL, audioBuffer, &_firstAudioBuffer);
+		return;
+	}
 
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
 		
 		if(_firstAudioBuffer) {
-			CMSampleBufferRef correctedFirstBuffer = [self copySampleBuffer:_firstAudioBuffer withNewTime:previousFrameTime];
+			CMTime duration = CMSampleBufferGetOutputDuration(_firstAudioBuffer);
+			CMTime correctedTime = CMTimeSubtract(previousFrameTime, duration);
+			CMSampleBufferRef correctedFirstBuffer = [self copySampleBuffer:_firstAudioBuffer withNewTime:correctedTime];
 			[self.assetWriterAudioInput appendSampleBuffer:correctedFirstBuffer];
 			CFRelease(_firstAudioBuffer);
 			CFRelease(correctedFirstBuffer);
@@ -376,15 +385,15 @@
     });
 }
 
-- (CMSampleBufferRef) copySampleBuffer:(CMSampleBufferRef)buffer withNewTime:(CMTime)time {
-	CMSampleBufferRef newSample;
+- (CMSampleBufferRef) copySampleBuffer:(CMSampleBufferRef)inBuffer withNewTime:(CMTime)time {
+	
 	CMSampleTimingInfo timingInfo;
-	CMSampleBufferGetSampleTimingInfo(buffer, 0, &timingInfo);
-	CMTime newBufferTime = CMSampleBufferGetPresentationTimeStamp(buffer);
-	newBufferTime.value = (previousFrameTime.value / previousFrameTime.timescale) * newBufferTime.timescale;
-	timingInfo.presentationTimeStamp = newBufferTime;
-	CMSampleBufferCreateCopyWithNewTiming(NULL, buffer, 1, &timingInfo, &newSample);
-	return newSample;
+	CMSampleBufferGetSampleTimingInfo(inBuffer, 0, &timingInfo);
+	timingInfo.presentationTimeStamp = time;
+	
+	CMSampleBufferRef outBuffer;
+	CMSampleBufferCreateCopyWithNewTiming(NULL, inBuffer, 1, &timingInfo, &outBuffer);
+	return outBuffer;
 }
 
 //--------------------------------------------------------------------------- texture cache.
