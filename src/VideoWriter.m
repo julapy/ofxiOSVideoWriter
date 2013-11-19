@@ -356,6 +356,13 @@
 		bFirstAudio = NO;
 		return;
 	}
+	// if the incoming audio buffer has an earlier timestamp than the current "first" buffer, then
+	// drop the current "first" buffer and store the new one instead
+	else if(_firstAudioBuffer && CMTIME_COMPARE_INLINE(CMSampleBufferGetPresentationTimeStamp(_firstAudioBuffer), >, newBufferTime)) {
+		CFRelease(_firstAudioBuffer);
+		CMSampleBufferCreateCopy(NULL, audioBuffer, &_firstAudioBuffer);
+		return;
+	}
 
     //----------------------------------------------------------
     dispatch_sync(videoWriterQueue, ^{
