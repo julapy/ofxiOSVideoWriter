@@ -136,6 +136,11 @@ void ofxiOSVideoWriter::startRecording() {
     
     startTime = ofGetElapsedTimef();
     startFrameNum = ofGetFrameNum();
+    startFrameNum += 1;
+    
+    // above, 1 frame is added to startFrameNum
+    // this is to compensate for the 1 frame delay in opengl rendering,
+    // and to prevent a random frame being displayed at the start of the video.
 
     [videoWriter startRecording];
 
@@ -280,6 +285,13 @@ void ofxiOSVideoWriter::end() {
         time = recordFrameNum / (float)recordFPS;
     } else {
         time = ofGetElapsedTimef() - startTime;
+    }
+    
+    if(time < 0) {
+        // startFrameNum is offset by 1 frame to compensate
+        // for the 1 frame delay in opengl rendering.
+        // when time is less then zero, skip adding the first random frame.
+        return;
     }
     
     if(bSwizzle) {
