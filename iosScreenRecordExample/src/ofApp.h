@@ -19,6 +19,11 @@ public:
     void setupVideoPlayerForPlayback();
     void setupVideoPlayerForRecording();
     
+    void videoPlayerReady();
+    void videoPlayerDidProgress();
+    void videoPlayerDidFinishSeeking();
+    void videoPlayerDidFinishPlayingVideo();
+    
     void updateMeshColor();
     void updatePoints();
     void drawStuff();
@@ -37,6 +42,8 @@ public:
     
     ofxiOSVideoWriter videoWriter;
     bool bRecord;
+    bool bRecordChanged;
+    bool bRecordReadyToStart;
     
     ofxiOSVideoPlayer videoPlayer0;
     

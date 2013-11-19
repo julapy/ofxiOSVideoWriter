@@ -12,6 +12,7 @@
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
 		5326AEA810A23A0500278DE6 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5326AEA710A23A0500278DE6 /* CoreLocation.framework */; };
 		53F323EB10A20EDB00E0DAE4 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53F323EA10A20EDB00E0DAE4 /* OpenAL.framework */; };
+		6734E0E0183B445300C2950E /* DelegateForOF.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6734E0DF183B445300C2950E /* DelegateForOF.mm */; };
 		6766567717D9C05000D667B2 /* ofxiOSVideoWriter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6766567417D9C05000D667B2 /* ofxiOSVideoWriter.mm */; };
 		6766567817D9C05000D667B2 /* VideoWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6766567617D9C05000D667B2 /* VideoWriter.m */; };
 		678C86BB17E0332300D870FE /* ofxBaseGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 678C86AA17E0332300D870FE /* ofxBaseGui.cpp */; };
@@ -68,6 +69,8 @@
 		32CA4F630368D1EE00C91783 /* ofxiOS_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxiOS_Prefix.pch; sourceTree = "<group>"; };
 		5326AEA710A23A0500278DE6 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		53F323EA10A20EDB00E0DAE4 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
+		6734E0DE183B445300C2950E /* DelegateForOF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DelegateForOF.h; sourceTree = "<group>"; };
+		6734E0DF183B445300C2950E /* DelegateForOF.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DelegateForOF.mm; sourceTree = "<group>"; };
 		6766567317D9C05000D667B2 /* ofxiOSVideoWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxiOSVideoWriter.h; sourceTree = "<group>"; };
 		6766567417D9C05000D667B2 /* ofxiOSVideoWriter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ofxiOSVideoWriter.mm; sourceTree = "<group>"; };
 		6766567517D9C05000D667B2 /* VideoWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoWriter.h; sourceTree = "<group>"; };
@@ -288,6 +291,8 @@
 				E4D8936B11527B74007E1F53 /* main.mm */,
 				67C578E517D43659006B500A /* ofApp.h */,
 				67C578E617D43659006B500A /* ofApp.mm */,
+				6734E0DE183B445300C2950E /* DelegateForOF.h */,
+				6734E0DF183B445300C2950E /* DelegateForOF.mm */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -403,6 +408,7 @@
 				678C86BC17E0332300D870FE /* ofxButton.cpp in Sources */,
 				678C86BD17E0332300D870FE /* ofxGuiGroup.cpp in Sources */,
 				678C86BE17E0332300D870FE /* ofxLabel.cpp in Sources */,
+				6734E0E0183B445300C2950E /* DelegateForOF.mm in Sources */,
 				678C86BF17E0332300D870FE /* ofxPanel.cpp in Sources */,
 				678C86C017E0332300D870FE /* ofxSlider.cpp in Sources */,
 				678C86C117E0332300D870FE /* ofxSliderGroup.cpp in Sources */,

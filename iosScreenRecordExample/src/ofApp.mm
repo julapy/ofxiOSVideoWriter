@@ -1,6 +1,9 @@
 #include "ofApp.h"
 #include "AVFoundationVideoPlayer.h"
 
+#import "DelegateForOF.h"
+static DelegateForOF * delegate = nil;
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     
@@ -35,12 +38,20 @@ void ofApp::setup(){
         points[i] = pointsNew[i];
     }
     
+    //----------------------------------------------------------
     videoPlayer0.loadMovie("video/ribbons.mp4");
     videoPlayer0.setLoopState(OF_LOOP_NORMAL);
     videoPlayer0.play();
+
+    AVFoundationVideoPlayer * avVideoPlayer = nil;
+    avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
+    avVideoPlayer.delegate = [[DelegateForOF alloc] initWithApp:this];
     
     //----------------------------------------------------------
     bRecord = false;
+    bRecordChanged = false;
+    bRecordReadyToStart = false;
+    
     videoWriter.setup(ofGetWidth(), ofGetHeight());
     videoWriter.setFPS(fps);
     videoWriter.addAudioInputFromVideoPlayer(videoPlayer0);
@@ -60,37 +71,71 @@ void ofApp::setup(){
 
 void ofApp::recordToggleChanged(bool & value) {
     bRecord = value;
-    if(bRecord) {
-        setupVideoPlayerForRecording();
-        
-        videoWriter.startRecording();
-    } else {
-        setupVideoPlayerForPlayback();
-        
-        videoWriter.finishRecording();
-    }
+    bRecordChanged = true;
 }
 
 void ofApp::setupVideoPlayerForPlayback() {
-    videoPlayer0.setPaused(false);
-    videoPlayer0.setPosition(0);
-    
-    AVFoundationVideoPlayer * avVideoPlayer = nil;
-    avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
-    [avVideoPlayer setSampleTime:kCMTimeInvalid];
 }
 
 void ofApp::setupVideoPlayerForRecording() {
-    videoPlayer0.setPaused(true);
-    videoPlayer0.setPosition(0);
+}
+
+//-------------------------------------------------------------- video player callbacks.
+void ofApp::videoPlayerReady() {
+    //
+}
+
+void ofApp::videoPlayerDidProgress() {
+    //
+}
+
+void ofApp::videoPlayerDidFinishSeeking() {
+    if(bRecord == true) {
+        bRecordReadyToStart = true;
+    }
+}
+
+void ofApp::videoPlayerDidFinishPlayingVideo() {
+    //
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 
+    //----------------------------------------------------------
+    if(bRecordChanged == true) {
+        if(bRecord == true) {
+            
+            // start recording.
+            // first 
+
+            videoPlayer0.setPaused(true);
+            videoPlayer0.setPosition(0);
+            
+        } else {
+            
+            videoWriter.finishRecording();
+            
+            videoPlayer0.setPaused(false);
+            videoPlayer0.setPosition(0);
+            
+            AVFoundationVideoPlayer * avVideoPlayer = nil;
+            avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
+            [avVideoPlayer setSampleTime:kCMTimeInvalid];
+        }
+        
+        bRecordChanged = false;
+    }
+    
+    if(bRecordReadyToStart == true) {
+        bRecordReadyToStart = false;
+
+        videoWriter.startRecording();
+    }
+
+    //----------------------------------------------------------
     videoWriter.update();
     
-    //----------------------------------------------------------
     if(videoWriter.isRecording()) {
 
         AVFoundationVideoPlayer * avVideoPlayer = nil;
