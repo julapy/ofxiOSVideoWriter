@@ -237,6 +237,8 @@ void ofxiOSVideoWriter::killTextureCache() {
 //------------------------------------------------------------------------- begin / end.
 void ofxiOSVideoWriter::begin() {
     fbo.begin();
+
+    ofClear(0);
 }
 
 void ofxiOSVideoWriter::end() {
