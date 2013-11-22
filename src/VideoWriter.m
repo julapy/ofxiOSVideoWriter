@@ -368,9 +368,7 @@
     dispatch_sync(videoWriterQueue, ^{
 		
 		if(_firstAudioBuffer) {
-			CMTime duration = CMSampleBufferGetOutputDuration(_firstAudioBuffer);
-			CMTime correctedTime = CMTimeSubtract(previousFrameTime, duration);
-			CMSampleBufferRef correctedFirstBuffer = [self copySampleBuffer:_firstAudioBuffer withNewTime:correctedTime];
+			CMSampleBufferRef correctedFirstBuffer = [self copySampleBuffer:_firstAudioBuffer withNewTime:previousFrameTime];
 			[self.assetWriterAudioInput appendSampleBuffer:correctedFirstBuffer];
 			CFRelease(_firstAudioBuffer);
 			CFRelease(correctedFirstBuffer);
