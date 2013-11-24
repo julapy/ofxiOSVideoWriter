@@ -50,7 +50,6 @@ public:
     vector<ofxiOSSoundPlayer *> sounds;
 
     float startTime;
-    int startFrameNum;
     int recordFrameNum;
     float recordFPS;
     bool bLockToFPS;

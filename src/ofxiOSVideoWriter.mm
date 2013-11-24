@@ -45,7 +45,6 @@ ofxiOSVideoWriter::ofxiOSVideoWriter() {
     videoWriter = nil;
     
     startTime = 0;
-    startFrameNum = 0;
     recordFrameNum = 0;
     recordFPS = 0;
     bLockToFPS = false;
@@ -111,7 +110,7 @@ void ofxiOSVideoWriter::clearAllAudioInput() {
 
 //------------------------------------------------------------------------- update.
 void ofxiOSVideoWriter::update() {
-    recordFrameNum = ofGetFrameNum() - startFrameNum;
+    //
 }
 
 //------------------------------------------------------------------------- draw.
@@ -135,12 +134,7 @@ void ofxiOSVideoWriter::startRecording() {
     }
     
     startTime = ofGetElapsedTimef();
-    startFrameNum = ofGetFrameNum();
-    startFrameNum += 1;
-    
-    // above, 1 frame is added to startFrameNum
-    // this is to compensate for the 1 frame delay in opengl rendering,
-    // and to prevent a random frame being displayed at the start of the video.
+    recordFrameNum = 0;
 
     [videoWriter startRecording];
 
@@ -278,7 +272,7 @@ void ofxiOSVideoWriter::end() {
         }
     }
     
-    //---------------------------------------------- add video frame.
+    //---------------------------------------------- frame time.
     float time = 0;
     
     if(bLockToFPS) {
@@ -287,13 +281,9 @@ void ofxiOSVideoWriter::end() {
         time = ofGetElapsedTimef() - startTime;
     }
     
-    if(time < 0) {
-        // startFrameNum is offset by 1 frame to compensate
-        // for the 1 frame delay in opengl rendering.
-        // when time is less then zero, skip adding the first random frame.
-        return;
-    }
+    recordFrameNum += 1;
     
+    //---------------------------------------------- add video frame.
     if(bSwizzle) {
         fboBGRA.bind();
     }
