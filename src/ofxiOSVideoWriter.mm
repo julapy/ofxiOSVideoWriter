@@ -273,12 +273,13 @@ void ofxiOSVideoWriter::end() {
     }
     
     //---------------------------------------------- frame time.
-    float time = 0;
+    CMTime frameTime = kCMTimeZero;
     
     if(bLockToFPS) {
-        time = recordFrameNum / (float)recordFPS;
+        frameTime = CMTimeMake(recordFrameNum, (int)recordFPS);
     } else {
-        time = ofGetElapsedTimef() - startTime;
+        float time = ofGetElapsedTimef() - startTime;
+        frameTime = CMTimeMakeWithSeconds(time, NSEC_PER_SEC);
     }
     
     recordFrameNum += 1;
@@ -288,7 +289,7 @@ void ofxiOSVideoWriter::end() {
         fboBGRA.bind();
     }
 
-	[videoWriter addFrameAtTime:CMTimeMakeWithSeconds(time, NSEC_PER_SEC)];
+	[videoWriter addFrameAtTime:frameTime];
     
     if(bSwizzle) {
         fboBGRA.unbind();
