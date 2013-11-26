@@ -136,6 +136,9 @@ void ofxiOSVideoWriter::startRecording() {
     startTime = ofGetElapsedTimef();
     recordFrameNum = 0;
 
+    BOOL bRealTime = (bLockToFPS == false);
+    bRealTime = YES; // for some reason, if bRealTime is false, it screws things up.
+    [videoWriter setExpectsMediaDataInRealTime:bRealTime];
     [videoWriter startRecording];
 
     if([videoWriter isTextureCached] == YES) {
@@ -282,14 +285,15 @@ void ofxiOSVideoWriter::end() {
         frameTime = CMTimeMakeWithSeconds(time, NSEC_PER_SEC);
     }
     
-    recordFrameNum += 1;
-    
     //---------------------------------------------- add video frame.
     if(bSwizzle) {
         fboBGRA.bind();
     }
 
-	[videoWriter addFrameAtTime:frameTime];
+	BOOL bVideoFrameAdded = [videoWriter addFrameAtTime:frameTime];
+    if(bVideoFrameAdded == YES) {
+        recordFrameNum += 1;
+    }
     
     if(bSwizzle) {
         fboBGRA.unbind();
@@ -299,6 +303,9 @@ void ofxiOSVideoWriter::end() {
     for(int i=0; i<videos.size(); i++) {
         ofxiOSVideoPlayer & video = *videos[i];
         AVFoundationVideoPlayer * avVideo = (AVFoundationVideoPlayer *)video.getAVFoundationVideoPlayer();
-        [videoWriter addAudio:[avVideo getAudioSampleBuffer]];
+        BOOL bAudioFrameAdded = [videoWriter addAudio:[avVideo getAudioSampleBuffer]];
+        if(bAudioFrameAdded == YES) {
+            //
+        }
     }
 }

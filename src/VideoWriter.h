@@ -27,6 +27,7 @@
 @property(nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor * assetWriterInputPixelBufferAdaptor;
 @property(nonatomic, retain) NSURL * outputURL;
 @property(nonatomic, assign) BOOL enableTextureCache;
+@property(nonatomic, assign) BOOL expectsMediaDataInRealTime;
 
 - (id)initWithFile:(NSString *)file andVideoSize:(CGSize)size;
 - (id)initWithPath:(NSString *)path andVideoSize:(CGSize)size;
@@ -37,8 +38,8 @@
 - (void)finishRecording;
 - (BOOL)isWriting;
 
-- (void)addFrameAtTime:(CMTime)frameTime;
-- (void)addAudio:(CMSampleBufferRef)audioBuffer;
+- (BOOL)addFrameAtTime:(CMTime)frameTime;
+- (BOOL)addAudio:(CMSampleBufferRef)audioBuffer;
 
 - (BOOL)isTextureCached;
 - (unsigned int)textureCacheID;

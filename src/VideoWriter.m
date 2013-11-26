@@ -36,6 +36,7 @@
 @synthesize assetWriterInputPixelBufferAdaptor;
 @synthesize outputURL;
 @synthesize enableTextureCache;
+@synthesize expectsMediaDataInRealTime;
 
 //---------------------------------------------------------------------------
 - (id)initWithFile:(NSString *)file andVideoSize:(CGSize)size {
@@ -71,6 +72,7 @@
         bUseTextureCache = NO;
         bEnableTextureCache = NO;
         bTextureCacheSupported = NO;
+        expectsMediaDataInRealTime = YES;
     }
     return self;
 }
@@ -134,7 +136,7 @@
     // passing nil for outputSettings instructs the input to pass through appended samples, doing no processing before they are written
     self.assetWriterVideoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                     outputSettings:videoSettings];
-    self.assetWriterVideoInput.expectsMediaDataInRealTime = YES;
+    self.assetWriterVideoInput.expectsMediaDataInRealTime = expectsMediaDataInRealTime;
     
     // You need to use BGRA for the video in order to get realtime encoding.
     // Color-swizzling shader is used to line up glReadPixels' normal RGBA output with the movie input's BGRA.
@@ -175,7 +177,7 @@
 
     self.assetWriterAudioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio
                                                                     outputSettings:audioSettings];
-    self.assetWriterAudioInput.expectsMediaDataInRealTime = YES;
+    self.assetWriterAudioInput.expectsMediaDataInRealTime = expectsMediaDataInRealTime;
     
     if([self.assetWriter canAddInput:self.assetWriterAudioInput]) {
         [self.assetWriter addInput:self.assetWriterAudioInput];
@@ -258,21 +260,21 @@
 }
 
 //--------------------------------------------------------------------------- add frame.
-- (void)addFrameAtTime:(CMTime)frameTime {
+- (BOOL)addFrameAtTime:(CMTime)frameTime {
 
     if(bWriting == NO) {
-        return;
+        return NO;
     }
     
     if((CMTIME_IS_INVALID(frameTime)) ||
        (CMTIME_COMPARE_INLINE(frameTime, ==, previousFrameTime)) ||
        (CMTIME_IS_INDEFINITE(frameTime))) {
-        return;
+        return NO;
     }
     
     if(assetWriterVideoInput.readyForMoreMediaData == NO) {
         NSLog(@"[VideoWriter addFrameAtTime] - not ready for more media data");
-        return;
+        return NO;
     }
 
     //---------------------------------------------------------- fill pixel buffer.
@@ -298,7 +300,7 @@
         CVPixelBufferPoolRef pixelBufferPool = [self.assetWriterInputPixelBufferAdaptor pixelBufferPool];
         CVReturn status = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &pixelBuffer);
         if((pixelBuffer == NULL) || (status != kCVReturnSuccess)) {
-            return;
+            return NO;
         } else {
             CVPixelBufferLockBaseAddress(pixelBuffer, 0);
             GLubyte * pixelBufferData = (GLubyte *)CVPixelBufferGetBaseAddress(pixelBuffer);
@@ -324,27 +326,29 @@
             CVPixelBufferRelease(pixelBuffer);
         }
     });
+    
+    return YES;
 }
 
-- (void)addAudio:(CMSampleBufferRef)audioBuffer {
+- (BOOL)addAudio:(CMSampleBufferRef)audioBuffer {
     
     if(bWriting == NO) {
-        return;
+        return NO;
     }
     
     if(audioBuffer == nil) {
         NSLog(@"[VideoWriter addAudio] - audioBuffer was nil.");
-        return;
+        return NO;
     }
 	
 	if(assetWriterAudioInput.readyForMoreMediaData == NO) {
         NSLog(@"[VideoWriter addAudio] - not ready for more media data");
-        return;
+        return NO;
     }
 	
 	CMTime newBufferTime = CMSampleBufferGetPresentationTimeStamp(audioBuffer);
 	if (CMTIME_COMPARE_INLINE(newBufferTime, ==, previousAudioTime)) {
-		return;
+		return NO;
 	}
 		
 	previousAudioTime = newBufferTime;
@@ -354,14 +358,14 @@
 	if(bFirstAudio) {
 		CMSampleBufferCreateCopy(NULL, audioBuffer, &_firstAudioBuffer);
 		bFirstAudio = NO;
-		return;
+		return NO;
 	}
 	// if the incoming audio buffer has an earlier timestamp than the current "first" buffer, then
 	// drop the current "first" buffer and store the new one instead
 	else if(_firstAudioBuffer && CMTIME_COMPARE_INLINE(CMSampleBufferGetPresentationTimeStamp(_firstAudioBuffer), >, newBufferTime)) {
 		CFRelease(_firstAudioBuffer);
 		CMSampleBufferCreateCopy(NULL, audioBuffer, &_firstAudioBuffer);
-		return;
+		return NO;
 	}
 
     //----------------------------------------------------------
@@ -381,6 +385,8 @@
             NSLog(@"[VideoWriter addAudio] - error appending audio samples - %@", errorDesc);
         }
     });
+    
+    return YES;
 }
 
 - (CMSampleBufferRef) copySampleBuffer:(CMSampleBufferRef)inBuffer withNewTime:(CMTime)time {
@@ -400,6 +406,10 @@
         NSLog(@"enableTextureCache can not be changed while recording.");
     }
     bEnableTextureCache = value;
+}
+
+- (void)setExpectsMediaDataInRealTime:(BOOL)value {
+    expectsMediaDataInRealTime = value;
 }
 
 - (void)initTextureCache {
