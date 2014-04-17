@@ -1,6 +1,7 @@
 //
 //  VideoWriter.m
 //  Created by lukasz karluk on 15/06/12.
+//  http://www.julapy.com
 //
 
 #import <AssetsLibrary/AssetsLibrary.h>

@@ -1,6 +1,7 @@
 //
 //  ofxiOSVideoWriter.cpp
 //  Created by Lukasz Karluk on 3/09/13.
+//  http://www.julapy.com
 //
 
 #include "ofxiOSVideoWriter.h"
