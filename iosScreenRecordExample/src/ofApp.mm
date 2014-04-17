@@ -121,7 +121,7 @@ void ofApp::update(){
             
             AVFoundationVideoPlayer * avVideoPlayer = nil;
             avVideoPlayer = (AVFoundationVideoPlayer *)videoPlayer0.getAVFoundationVideoPlayer();
-            [avVideoPlayer setSampleTime:kCMTimeInvalid];
+            [avVideoPlayer setSynchSampleTime:kCMTimeInvalid];
         }
         
         bRecordChanged = false;
@@ -143,7 +143,7 @@ void ofApp::update(){
         
         int recordFrameNum = videoWriter.getRecordFrameNum();
         float timeSec = recordFrameNum / (float)videoWriter.getFPS();
-        [avVideoPlayer setSampleTimeInSec:timeSec];
+        [avVideoPlayer setSynchSampleTimeInSec:timeSec];
     }
     
     videoPlayer0.update();
