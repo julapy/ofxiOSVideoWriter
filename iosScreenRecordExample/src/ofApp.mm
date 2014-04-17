@@ -1,8 +1,6 @@
 #include "ofApp.h"
 #include "AVFoundationVideoPlayer.h"
-
 #import "DelegateForOF.h"
-static DelegateForOF * delegate = nil;
 
 //--------------------------------------------------------------
 void ofApp::setup(){

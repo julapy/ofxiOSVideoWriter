@@ -61,7 +61,6 @@ ofxiOSVideoWriter::~ofxiOSVideoWriter() {
 
 //------------------------------------------------------------------------- setup.
 void ofxiOSVideoWriter::setup(int videoWidth, int videoHeight) {
-    NSError * error = nil;
     NSString * docPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString * docVideoPath = [docPath stringByAppendingPathComponent:@"/video.mov"];
 
