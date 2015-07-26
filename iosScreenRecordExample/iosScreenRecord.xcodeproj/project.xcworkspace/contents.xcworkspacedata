@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:iosScreenRecord.xcodeproj">
+      location = "self:/Volumes/STORAGE/openFrameworks/addons/ofxiOSVideoWriter/iosScreenRecordExample/iosScreenRecord.xcodeproj">
    </FileRef>
 </Workspace>

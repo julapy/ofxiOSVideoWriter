@@ -8,7 +8,7 @@ void ofApp::setup(){
     float fps = 30;
     ofSetFrameRate(fps);
     
-    ofSetOrientation(OF_ORIENTATION_90_RIGHT);
+//    ofSetOrientation(OF_ORIENTATION_90_RIGHT);
     
     //----------------------------------------------------------
     c1 = ofColor::magenta;
@@ -37,7 +37,7 @@ void ofApp::setup(){
     }
     
     //----------------------------------------------------------
-    videoPlayer0.loadMovie("video/ribbons.mp4");
+    videoPlayer0.load("video/ribbons.mp4");
     videoPlayer0.setLoopState(OF_LOOP_NORMAL);
     videoPlayer0.play();
 
@@ -200,7 +200,7 @@ void ofApp::drawStuff() {
     
     ofPushStyle();
     ofSetColor(0);
-    ofRect(0, 0, ofGetWidth(), ofGetHeight());
+    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
     ofPopStyle();
     
 	box.draw();
@@ -213,7 +213,7 @@ void ofApp::drawStuff() {
     y = 0;
     w = videoPlayer0.getWidth();
     h = videoPlayer0.getHeight();
-    videoPlayer0.getTexture()->draw(x, y, w, h);
+    videoPlayer0.getTexturePtr()->draw(x, y, w, h);
     
     ofSetColor(255);
 }
@@ -227,7 +227,7 @@ void ofApp::drawPoints() {
         int j = i + 1;
         ofVec2f & p1 = points[i];
         ofVec2f & p2 = points[j];
-        ofLine(p1.x, p1.y, p2.x, p2.y);
+        ofDrawLine(p1.x, p1.y, p2.x, p2.y);
     }
     
     ofPopStyle();
