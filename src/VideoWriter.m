@@ -211,12 +211,6 @@
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
         [self disposeAssetWriterAndWriteFile:YES];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
-                [self.delegate videoWriterComplete:self.outputURL];
-            }
-            NSLog(@"video saved! - %@", self.outputURL.description);
-        });
     });
 }
 
@@ -232,11 +226,6 @@
     bWriting = NO;
     dispatch_sync(videoWriterQueue, ^{
 		[self disposeAssetWriterAndWriteFile:NO];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if([self.delegate respondsToSelector:@selector(videoWriterCancelled)]) {
-                [self.delegate videoWriterCancelled];
-            }
-        });
     });
 }
 
@@ -250,6 +239,24 @@
 		self.assetWriter = nil;
 		self.assetWriterInputPixelBufferAdaptor = nil;
 		[self destroyTextureCache];
+        
+        if(writeFile == YES) {
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
+                    [self.delegate videoWriterComplete:self.outputURL];
+                }
+                NSLog(@"video saved! - %@", self.outputURL.description);
+            });
+            
+        } else {
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if([self.delegate respondsToSelector:@selector(videoWriterCancelled)]) {
+                    [self.delegate videoWriterCancelled];
+                }
+            });
+        }
 	};
 	
 	if(writeFile) {
