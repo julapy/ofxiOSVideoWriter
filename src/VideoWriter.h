@@ -12,6 +12,7 @@
 - (void)videoWriterCancelled;
 - (void)videoWriterSavedToCameraRoll;
 - (void)videoWriterError:(NSError *)error;
+- (void)videoWriterLog:(NSString *)message;
 @end
 
 @interface VideoWriter : NSObject {

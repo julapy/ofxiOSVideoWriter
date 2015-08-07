@@ -246,7 +246,11 @@
                 if([self.delegate respondsToSelector:@selector(videoWriterComplete:)]) {
                     [self.delegate videoWriterComplete:self.outputURL];
                 }
-                NSLog(@"video saved! - %@", self.outputURL.description);
+
+                if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+                    NSString * log = [NSString stringWithFormat:@"video saved! - %@", self.outputURL.description];
+                    [self.delegate videoWriterLog:log];
+                }
             });
             
         } else {
@@ -285,7 +289,10 @@
     }
     
     if(assetWriterVideoInput.readyForMoreMediaData == NO) {
-        NSLog(@"[VideoWriter addFrameAtTime] - not ready for more media data");
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = @"[VideoWriter addFrameAtTime] - not ready for more media data";
+            [self.delegate videoWriterLog:log];
+        }
         return NO;
     }
 
@@ -326,8 +333,11 @@
         BOOL bOk = [self.assetWriterInputPixelBufferAdaptor appendPixelBuffer:pixelBuffer
                                                          withPresentationTime:frameTime];
         if(bOk == NO) {
-            NSString * errorDesc = self.assetWriter.error.description;
-            NSLog(@"[VideoWriter addFrameAtTime] - error appending video samples - %@", errorDesc);
+            if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+                NSString * errorDesc = self.assetWriter.error.description;
+                NSString * log = [NSString stringWithFormat:@"[VideoWriter addFrameAtTime] - error appending video samples - %@", errorDesc];
+                [self.delegate videoWriterLog:log];
+            }
         }
         
         CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
@@ -349,12 +359,18 @@
     }
     
     if(audioBuffer == nil) {
-        NSLog(@"[VideoWriter addAudio] - audioBuffer was nil.");
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = @"[VideoWriter addAudio] - audioBuffer was nil.";
+            [self.delegate videoWriterLog:log];
+        }
         return NO;
     }
 	
 	if(assetWriterAudioInput.readyForMoreMediaData == NO) {
-        NSLog(@"[VideoWriter addAudio] - not ready for more media data");
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = @"[VideoWriter addAudio] - not ready for more media data";
+            [self.delegate videoWriterLog:log];
+        }
         return NO;
     }
 	
@@ -393,8 +409,12 @@
 		
 		BOOL bOk = [self.assetWriterAudioInput appendSampleBuffer:audioBuffer];
         if(bOk == NO) {
-            NSString * errorDesc = self.assetWriter.error.description;
-            NSLog(@"[VideoWriter addAudio] - error appending audio samples - %@", errorDesc);
+            
+            if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+                NSString * errorDesc = self.assetWriter.error.description;
+                NSString * log = [NSString stringWithFormat:@"[VideoWriter addAudio] - error appending audio samples - %@", errorDesc];
+                [self.delegate videoWriterLog:log];
+            }
         }
     });
     
@@ -415,7 +435,11 @@
 //--------------------------------------------------------------------------- texture cache.
 - (void)setEnableTextureCache:(BOOL)value {
     if(bWriting == YES) {
-        NSLog(@"enableTextureCache can not be changed while recording.");
+        
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = @"enableTextureCache can not be changed while recording.";
+            [self.delegate videoWriterLog:log];
+        }
     }
     bEnableTextureCache = value;
 }
@@ -456,7 +480,10 @@
 #endif
     
     if(error) {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", error);
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = [NSString stringWithFormat:@"Error at CVOpenGLESTextureCacheCreate %d", error];
+            [self.delegate videoWriterLog:log];
+        }
         bUseTextureCache = NO;
         return;
     }
@@ -483,7 +510,10 @@
                                                          &_textureRef);               // CVOpenGLESTextureRef *textureOut
     
     if(error) {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreateTextureFromImage %d", error);
+        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+            NSString * log = [NSString stringWithFormat:@"Error at CVOpenGLESTextureCacheCreateTextureFromImage %d", error];
+            [self.delegate videoWriterLog:log];
+        }
         bUseTextureCache = NO;
         return;
     }
@@ -529,20 +559,22 @@
 //---------------------------------------------------------------------------
 - (void)saveMovieToCameraRoll {
     
-    NSLog(@" saveMovieToCameraRoll ");
-    
-    // save the movie to the camera roll
 	ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-	//NSLog(@"writing \"%@\" to photos album", outputURL);
 	[library writeVideoAtPathToSavedPhotosAlbum:self.outputURL
 								completionBlock:^(NSURL *assetURL, NSError *error) {
 									if (error) {
-										NSLog(@"assets library failed (%@)", error);
+                                        if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+                                            NSString * log = [NSString stringWithFormat:@"assets library failed (%@)", error];
+                                            [self.delegate videoWriterLog:log];
+                                        }
 									}
 									else {
 										[[NSFileManager defaultManager] removeItemAtURL:self.outputURL error:&error];
 										if (error)
-											NSLog(@"Couldn't remove temporary movie file \"%@\"", self.outputURL);
+                                            if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
+                                                NSString * log = [NSString stringWithFormat:@"Couldn't remove temporary movie file \"%@\"", self.outputURL];
+                                                [self.delegate videoWriterLog:log];
+                                            }
 									}
                                     
 									self.outputURL = nil;
