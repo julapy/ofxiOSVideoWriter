@@ -211,7 +211,7 @@ void ofxiOSVideoWriter::initTextureCache() {
     }
     
     fbo.bind();
-    fbo.attachTexture(texture, texture.getTextureData().glTypeInternal, 0);
+    fbo.attachTexture(texture, GL_RGBA, 0);
     fbo.unbind();
 }
 
@@ -228,7 +228,7 @@ void ofxiOSVideoWriter::killTextureCache() {
     texture.allocate(textureW, textureH, GL_RGBA);
     
     fbo.bind();
-    fbo.attachTexture(texture, texture.getTextureData().glTypeInternal, 0);
+    fbo.attachTexture(texture, GL_RGBA, 0);
     fbo.unbind();
 }
 

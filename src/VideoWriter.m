@@ -85,7 +85,7 @@
 - (void)dealloc {
     self.outputURL = nil;
     
-    [self disposeAssetWriterAndWriteFile:NO];
+    [self cancelRecording];
 	
 	if(_firstAudioBuffer) {
 		CFRelease(_firstAudioBuffer);

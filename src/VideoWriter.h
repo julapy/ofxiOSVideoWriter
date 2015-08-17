@@ -16,7 +16,7 @@
 @end
 
 @interface VideoWriter : NSObject {
-    id<AVAudioPlayerDelegate> delegate;
+    id<VideoWriterDelegate> delegate;
     dispatch_queue_t videoWriterQueue;
 }
 
