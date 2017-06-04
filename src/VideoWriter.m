@@ -11,7 +11,7 @@
 #import <OpenGLES/ES2/glext.h>
 #import "VideoWriter.h"
 
-@interface VideoWriter() {
+@interface VideoWriter() <AVCaptureAudioDataOutputSampleBufferDelegate> {
 	CMTime startTime;
     CMTime previousFrameTime;
 	CMTime previousAudioTime;
@@ -20,6 +20,7 @@
     BOOL bUseTextureCache;
     BOOL bEnableTextureCache;
     BOOL bTextureCacheSupported;
+    BOOL bMicAudio;
 	BOOL bFirstAudio;
 	
     CVOpenGLESTextureCacheRef _textureCache;
@@ -42,6 +43,10 @@
 @synthesize outputURL;
 @synthesize enableTextureCache;
 @synthesize expectsMediaDataInRealTime;
+
+@synthesize captureInput;
+@synthesize captureOutput;
+@synthesize captureSession;
 
 //---------------------------------------------------------------------------
 - (id)initWithFile:(NSString *)file andVideoSize:(CGSize)size {
@@ -77,6 +82,8 @@
         bUseTextureCache = NO;
         bEnableTextureCache = NO;
         bTextureCacheSupported = NO;
+        bMicAudio = YES;
+        bFirstAudio = NO;
         expectsMediaDataInRealTime = YES;
     }
     return self;
@@ -130,6 +137,25 @@
         return;
     }
     
+    //--------------------------------------------------------------------------- setup mic capture session
+    if(bMicAudio) {
+        NSError * micError = nil;
+        AVCaptureDevice * captureDevice = [AVCaptureDevice defaultDeviceWithMediaType: AVMediaTypeAudio];
+        self.captureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&micError];
+        self.captureOutput = [[[AVCaptureAudioDataOutput alloc] init] autorelease];
+        
+        self.captureSession = [[[AVCaptureSession alloc] init] autorelease];
+        self.captureSession.sessionPreset = AVCaptureSessionPresetLow;
+        [self.captureSession addInput:self.captureInput];
+        [self.captureSession addOutput:self.captureOutput];
+
+        dispatch_queue_t queue = dispatch_queue_create("MyQueue", NULL);
+            [self.captureOutput setSampleBufferDelegate:self queue:queue];
+        dispatch_release(queue);
+        
+        [self.captureSession startRunning];
+    }
+
     //--------------------------------------------------------------------------- adding video input.
     NSDictionary * videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
                                     AVVideoCodecH264, AVVideoCodecKey,
@@ -198,6 +224,7 @@
 }
 
 - (void)finishRecording {
+
     if(bWriting == NO) {
         return;
     }
@@ -206,6 +233,15 @@
        assetWriter.status == AVAssetWriterStatusCancelled ||
        assetWriter.status == AVAssetWriterStatusUnknown) {
         return;
+    }
+    
+    if(self.captureSession) {
+        [self.captureSession stopRunning];
+        [self.captureSession removeInput:self.captureInput];
+        [self.captureSession removeOutput:self.captureOutput];
+        self.captureSession = nil;
+        self.captureInput = nil;
+        self.captureOutput = nil;
     }
     
     bWriting = NO;
@@ -350,6 +386,22 @@
     });
     
     return YES;
+}
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput_
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection {
+    
+    if(bWriting == NO) {
+        return;
+    }
+    if(CMSampleBufferDataIsReady(sampleBuffer) == false) {
+        NSLog( @"sample buffer is not ready. Skipping sample" );
+        return;
+    }
+    if(self.captureOutput == captureOutput_){ //double check to make sure this is actually audio
+        [self addAudio:sampleBuffer]; // this is where the audio gets sent to be recorded
+    }
 }
 
 - (BOOL)addAudio:(CMSampleBufferRef)audioBuffer {

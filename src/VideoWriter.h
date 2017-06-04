@@ -31,6 +31,10 @@
 @property(nonatomic, assign) BOOL enableTextureCache;
 @property(nonatomic, assign) BOOL expectsMediaDataInRealTime;
 
+@property(nonatomic, retain) AVCaptureDeviceInput * captureInput;
+@property(nonatomic, retain) AVCaptureAudioDataOutput * captureOutput;
+@property(nonatomic, retain) AVCaptureSession * captureSession;
+
 - (id)initWithFile:(NSString *)file andVideoSize:(CGSize)size;
 - (id)initWithPath:(NSString *)path andVideoSize:(CGSize)size;
 - (id)initWithURL:(NSURL *)fileURL andVideoSize:(CGSize)size;
