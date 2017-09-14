@@ -286,6 +286,7 @@ void ofxiOSVideoWriter::end() {
         fboBGRA.bind();
     }
 
+    //ofLog() << "show do wrignit " << recordFrameNum << ", " << frameTime.value;
 	BOOL bVideoFrameAdded = [videoWriter addFrameAtTime:frameTime];
     if(bVideoFrameAdded == YES) {
         recordFrameNum += 1;
