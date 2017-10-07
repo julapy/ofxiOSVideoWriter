@@ -37,6 +37,8 @@
 	<string>1.0</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app record audio.</string>
 	<key>UIApplicationExitsOnSuspend</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>
