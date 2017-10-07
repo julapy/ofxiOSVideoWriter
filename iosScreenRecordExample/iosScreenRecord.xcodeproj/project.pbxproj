@@ -10,9 +10,10 @@
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
+		4A48E6C11F88FAB4001B03E1 /* GLVideoWriter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A48E6BF1F88FAB4001B03E1 /* GLVideoWriter.mm */; };
+		4A48E6C21F88FB30001B03E1 /* ofxiOSVideoWriter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6731F7661B64C9E500FF9E1F /* ofxiOSVideoWriter.mm */; };
 		5326AEA810A23A0500278DE6 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5326AEA710A23A0500278DE6 /* CoreLocation.framework */; };
 		53F323EB10A20EDB00E0DAE4 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53F323EA10A20EDB00E0DAE4 /* OpenAL.framework */; };
-		6731F7691B64C9E500FF9E1F /* ofxiOSVideoWriter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6731F7661B64C9E500FF9E1F /* ofxiOSVideoWriter.mm */; };
 		6731F76A1B64C9E500FF9E1F /* VideoWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6731F7681B64C9E500FF9E1F /* VideoWriter.m */; };
 		6731F77E1B64C9FC00FF9E1F /* ofxBaseGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6731F76D1B64C9FC00FF9E1F /* ofxBaseGui.cpp */; };
 		6731F77F1B64C9FC00FF9E1F /* ofxButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6731F76F1B64C9FC00FF9E1F /* ofxButton.cpp */; };
@@ -65,6 +66,8 @@
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		288765FC0DF74451002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		32CA4F630368D1EE00C91783 /* ofxiOS_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxiOS_Prefix.pch; sourceTree = "<group>"; };
+		4A48E6BF1F88FAB4001B03E1 /* GLVideoWriter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GLVideoWriter.mm; sourceTree = "<group>"; };
+		4A48E6C01F88FAB4001B03E1 /* GLVideoWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLVideoWriter.h; sourceTree = "<group>"; };
 		5326AEA710A23A0500278DE6 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		53F323EA10A20EDB00E0DAE4 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		6731F7651B64C9E500FF9E1F /* ofxiOSVideoWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxiOSVideoWriter.h; sourceTree = "<group>"; };
@@ -201,6 +204,8 @@
 			children = (
 				6731F7651B64C9E500FF9E1F /* ofxiOSVideoWriter.h */,
 				6731F7661B64C9E500FF9E1F /* ofxiOSVideoWriter.mm */,
+				4A48E6C01F88FAB4001B03E1 /* GLVideoWriter.h */,
+				4A48E6BF1F88FAB4001B03E1 /* GLVideoWriter.mm */,
 				6731F7671B64C9E500FF9E1F /* VideoWriter.h */,
 				6731F7681B64C9E500FF9E1F /* VideoWriter.m */,
 			);
@@ -405,9 +410,9 @@
 			files = (
 				6731F76A1B64C9E500FF9E1F /* VideoWriter.m in Sources */,
 				6731F77F1B64C9FC00FF9E1F /* ofxButton.cpp in Sources */,
+				4A48E6C11F88FAB4001B03E1 /* GLVideoWriter.mm in Sources */,
 				6731F7831B64C9FC00FF9E1F /* ofxSlider.cpp in Sources */,
 				6731F7811B64C9FC00FF9E1F /* ofxLabel.cpp in Sources */,
-				6731F7691B64C9E500FF9E1F /* ofxiOSVideoWriter.mm in Sources */,
 				6731F7851B64C9FC00FF9E1F /* ofxToggle.cpp in Sources */,
 				6731F7841B64C9FC00FF9E1F /* ofxSliderGroup.cpp in Sources */,
 				6731F7801B64C9FC00FF9E1F /* ofxGuiGroup.cpp in Sources */,
@@ -415,6 +420,7 @@
 				6731F77E1B64C9FC00FF9E1F /* ofxBaseGui.cpp in Sources */,
 				E4D8936E11527B74007E1F53 /* main.mm in Sources */,
 				E4D8936F11527B74007E1F53 /* ofApp.mm in Sources */,
+				4A48E6C21F88FB30001B03E1 /* ofxiOSVideoWriter.mm in Sources */,
 				6731F7821B64C9FC00FF9E1F /* ofxPanel.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
