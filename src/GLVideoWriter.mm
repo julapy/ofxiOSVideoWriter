@@ -77,10 +77,7 @@ void GLVideoWriter::setup(int videoWidth, int videoHeight, string filePath) {
     videoWriter.context = [ofxiOSEAGLView getInstance].context; // TODO - this should probably be passed in with init.
     videoWriter.enableTextureCache = YES; // TODO - this should be turned on by default when it is working.
     
-    shaderBGRA.setupShaderFromSource(GL_VERTEX_SHADER, swizzleVertexShader);
-    shaderBGRA.setupShaderFromSource(GL_FRAGMENT_SHADER, swizzleFragmentShader);
-    shaderBGRA.bindDefaults();
-    shaderBGRA.linkProgram();
+    initShader();
     
     fbo.allocate(videoWidth, videoHeight, GL_RGBA, 0);
     fboBGRA.allocate(videoWidth, videoHeight, GL_RGBA, 0);
@@ -93,6 +90,48 @@ void GLVideoWriter::setFPS(float fps) {
 
 float GLVideoWriter::getFPS() {
     return recordFPS;
+}
+
+//------------------------------------------------------------------------- swizzle shader.
+void GLVideoWriter::initShader() {
+    program = glCreateProgram();
+    
+    shaderVert = compileShader(GL_VERTEX_SHADER, swizzleVertexShader);
+    shaderFrag = compileShader(GL_FRAGMENT_SHADER, swizzleFragmentShader);
+    
+    glBindAttribLocation(program, 0, "position");
+    glBindAttribLocation(program, 1, "color");
+    glBindAttribLocation(program, 2, "normal");
+    glBindAttribLocation(program, 3, "texcoord");
+    
+    glAttachShader(program, shaderVert);
+    glAttachShader(program, shaderFrag);
+    
+    glLinkProgram(program);
+}
+
+GLuint GLVideoWriter::compileShader(GLenum type, string source) {
+    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
+    const char * sptr = source.c_str();
+    int ssize = (int)source.size();
+    glShaderSource(shader, 1, &sptr, &ssize);
+    glCompileShader(shader);
+    return shader;
+}
+
+void GLVideoWriter::bindShader() {
+    glUseProgram(program);
+    
+    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+    ofMatrix4x4 projectionMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+    ofMatrix4x4 modelViewProjectionMatrix = modelViewMatrix * projectionMatrix;
+    // TODO: modelViewProjectionMatrix needs to be calculated without OF.
+    
+    glUniformMatrix4fv(0, 1, GL_FALSE, modelViewProjectionMatrix.getPtr());
+}
+
+void GLVideoWriter::unbindShader() {
+    glUseProgram(0);
 }
 
 //------------------------------------------------------------------------- update.
@@ -245,17 +284,13 @@ void GLVideoWriter::end() {
     
     if(bSwizzle) {
         
-        if(shaderBGRA.isLoaded()) {
-            shaderBGRA.begin();
-        }
+        bindShader();
         fboBGRA.begin();
         
         fbo.draw(0, 0);
         
         fboBGRA.end();
-        if(shaderBGRA.isLoaded()) {
-            shaderBGRA.end();
-        }
+        unbindShader();
     }
     
     //---------------------------------------------- frame time.

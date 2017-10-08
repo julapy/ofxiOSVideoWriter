@@ -18,6 +18,11 @@ public:
     void setFPS(float fps);
     float getFPS();
     
+    void initShader();
+    GLuint compileShader(GLenum type, string source);
+    void bindShader();
+    void unbindShader();
+    
     void update();
     void draw(ofRectangle & rect);
     void draw(float x=0, float y=0);
@@ -38,11 +43,14 @@ public:
     VideoWriter * videoWriter;
     ofFbo fbo;
     ofFbo fboBGRA;
-    ofShader shaderBGRA;
     
     float startTime;
     int recordFrameNum;
     float recordFPS;
     bool bLockToFPS;
     bool bUseTextureCache;
+    
+    GLuint program;
+    GLuint shaderVert;
+    GLuint shaderFrag;
 };
