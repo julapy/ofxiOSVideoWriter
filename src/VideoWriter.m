@@ -16,6 +16,7 @@
     CMTime previousFrameTime;
     CMTime previousAudioTime;
     CMTime firstAudioTimeStamp;
+    CMTime firstVideoTimestamp;
     BOOL bWriting;
     
     BOOL bUseTextureCache;
@@ -83,6 +84,7 @@
         previousFrameTime = kCMTimeInvalid;
         previousAudioTime = kCMTimeInvalid;
         firstAudioTimeStamp = kCMTimeInvalid;
+        firstVideoTimestamp = kCMTimeInvalid;
         videoWriterQueue = dispatch_queue_create("ofxiOSVideoWriter.VideoWriterQueue", NULL);
         audioCaptureQueue = dispatch_queue_create("AudioCaptureQueue", NULL);
         
@@ -124,6 +126,7 @@
     startTime = kCMTimeZero;
     previousFrameTime = kCMTimeInvalid;
     firstAudioTimeStamp = kCMTimeInvalid;
+    firstVideoTimestamp = kCMTimeInvalid;
     bFirstAudio = YES;
     if(_firstAudioBuffer) {
         CFRelease(_firstAudioBuffer);
@@ -242,9 +245,10 @@
     }
     
     //--------------------------------------------------------------------------- start writing!
-    [self.assetWriter startWriting];
+    // FIXED: moved this to addFrame (after a frame has been added)
+    //[self.assetWriter startWriting];
     //[self.assetWriter startSessionAtSourceTime:startTime];
-    [self.assetWriter startSessionAtSourceTime:firstAudioTimeStamp];
+    //[self.assetWriter startSessionAtSourceTime:firstAudioTimeStamp];
     
     if(bEnableTextureCache) {
         [self initTextureCache];
@@ -375,6 +379,19 @@
         return NO;
     }
     
+    // need a video frame time to begin before writing
+    // must also have the first audio frame to start writing
+    if(CMTIME_IS_INVALID(firstVideoTimestamp) && !CMTIME_IS_INVALID(firstAudioTimeStamp)) {
+        firstVideoTimestamp = frameTime;
+        NSLog(@"first video timestamp: %f", CMTimeGetSeconds(firstVideoTimestamp));
+        
+        // start video writing when we have the first video frame + the first audio frame
+        [self.assetWriter startWriting];
+        CMTime startTime = CMTimeAdd(firstAudioTimeStamp, firstVideoTimestamp);
+        [self.assetWriter startSessionAtSourceTime:startTime];
+        NSLog(@"BEGIN writing: %f", CMTimeGetSeconds(startTime));
+    }
+    
     if(assetWriterVideoInput.readyForMoreMediaData == NO) {
         if([self.delegate respondsToSelector:@selector(videoWriterLog:)]) {
             NSString * log = @"[VideoWriter addFrameAtTime] - not ready for more media data";
@@ -458,7 +475,7 @@
         return;
     }
     if (captureOutput == self.captureOutputAudio) {
-        if (CMTIME_COMPARE_INLINE(firstAudioTimeStamp, ==, kCMTimeInvalid)) {
+        if (CMTIME_IS_INVALID(firstAudioTimeStamp)) {
             firstAudioTimeStamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
             //NSLog(@"first audio time stamp: %f", CMTimeGetSeconds(firstAudioTimeStamp));
             //NSLog(@"first start time stamp: %f", CMTimeGetSeconds(startTime));
